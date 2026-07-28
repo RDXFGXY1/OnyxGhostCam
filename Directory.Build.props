@@ -1,0 +1,22 @@
+<Project>
+
+  <!-- Shared settings applied to every .NET project in the solution -->
+  <PropertyGroup>
+    <Product>Onyx</Product>
+    <Company>Onyx</Company>
+    <Version>0.1.0</Version>
+    <Authors>Ayoub Zelmati</Authors>
+
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningLevel>5</WarningLevel>
+
+    <!-- This app is Windows + GPU (DirectML) only -->
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+</Project>
