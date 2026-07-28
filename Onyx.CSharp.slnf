@@ -1,0 +1,10 @@
+{
+  "solution": {
+    "path": "Onyx.sln",
+    "projects": [
+      "src\\Onyx.Core\\Onyx.Core.csproj",
+      "src\\Onyx.App\\Onyx.App.csproj",
+      "tests\\Onyx.Core.Tests\\Onyx.Core.Tests.csproj"
+    ]
+  }
+}
