@@ -4,19 +4,168 @@
     <!-- ===== Onyx brutalist HUD palette: dark red + black ===== -->
     <Color x:Key="BgBlackColor">#FF0A0A0A</Color>
     <Color x:Key="PanelColor">#FF141414</Color>
-    <Color x:Key="AccentRedColor">#FFB01818</Color>
+    <Color x:Key="AccentRedColor">#FFC81E1E</Color>
     <Color x:Key="AccentRedDimColor">#FF5A0C0C</Color>
-    <Color x:Key="TextColor">#FFE0E0E0</Color>
+    <Color x:Key="TextColor">#FFD8D8D8</Color>
+    <Color x:Key="TextDimColor">#FF7A7A7A</Color>
 
     <SolidColorBrush x:Key="BgBlack" Color="{StaticResource BgBlackColor}" />
     <SolidColorBrush x:Key="Panel" Color="{StaticResource PanelColor}" />
     <SolidColorBrush x:Key="AccentRed" Color="{StaticResource AccentRedColor}" />
     <SolidColorBrush x:Key="AccentRedDim" Color="{StaticResource AccentRedDimColor}" />
     <SolidColorBrush x:Key="Text" Color="{StaticResource TextColor}" />
+    <SolidColorBrush x:Key="TextDim" Color="{StaticResource TextDimColor}" />
 
-    <!-- Fonts (Bebas Neue headers / Space Mono body) are bundled under Assets/Fonts later. -->
-    <!-- Placeholder families until the .ttf files are added: -->
-    <FontFamily x:Key="HeaderFont">Consolas</FontFamily>
-    <FontFamily x:Key="BodyFont">Consolas</FontFamily>
+    <!-- Fonts: comma-separated fallbacks. Drop Bebas Neue / Space Mono .ttf into
+         Assets/Fonts and change these two lines to use them (see Assets/Fonts/README). -->
+    <FontFamily x:Key="HeaderFont">Bahnschrift SemiBold Condensed, Arial Narrow, Consolas</FontFamily>
+    <FontFamily x:Key="BodyFont">Consolas, Cascadia Mono, Courier New</FontFamily>
+
+    <!-- Scanline overlay: 2px dark line / 2px gap, low opacity, tiled. -->
+    <DrawingBrush x:Key="Scanlines" TileMode="Tile"
+                  Viewport="0,0,3,3" ViewportUnits="Absolute" Opacity="0.16">
+        <DrawingBrush.Drawing>
+            <GeometryDrawing Brush="#FF000000">
+                <GeometryDrawing.Geometry>
+                    <RectangleGeometry Rect="0,0,3,1.5" />
+                </GeometryDrawing.Geometry>
+            </GeometryDrawing>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+
+    <!-- ===== Label text styles ===== -->
+    <Style x:Key="HudLabel" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource BodyFont}" />
+        <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style x:Key="HudValue" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource BodyFont}" />
+        <Setter Property="Foreground" Value="{StaticResource AccentRed}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- ===== Button ===== -->
+    <Style TargetType="Button">
+        <Setter Property="FontFamily" Value="{StaticResource HeaderFont}" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="Foreground" Value="{StaticResource AccentRed}" />
+        <Setter Property="Background" Value="{StaticResource Panel}" />
+        <Setter Property="BorderBrush" Value="{StaticResource AccentRed}" />
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="Padding" Value="10,4" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="b" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="b" Property="Background" Value="{StaticResource AccentRed}" />
+                            <Setter Property="Foreground" Value="{StaticResource BgBlack}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource AccentRedDim}" />
+                            <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ===== ToggleButton (used for the SHIELD switch) ===== -->
+    <Style TargetType="ToggleButton">
+        <Setter Property="FontFamily" Value="{StaticResource HeaderFont}" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="Foreground" Value="{StaticResource Text}" />
+        <Setter Property="Background" Value="{StaticResource Panel}" />
+        <Setter Property="BorderBrush" Value="{StaticResource AccentRedDim}" />
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="b" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}" Padding="12,8">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="b" Property="Background" Value="{StaticResource AccentRed}" />
+                            <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource AccentRed}" />
+                            <Setter Property="Foreground" Value="{StaticResource BgBlack}" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource AccentRed}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ===== CheckBox: square red box, fills when checked ===== -->
+    <Style TargetType="CheckBox">
+        <Setter Property="Foreground" Value="{StaticResource Text}" />
+        <Setter Property="FontFamily" Value="{StaticResource BodyFont}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <StackPanel Orientation="Horizontal" Background="Transparent">
+                        <Border x:Name="box" Width="16" Height="16" VerticalAlignment="Center"
+                                Background="{StaticResource Panel}"
+                                BorderBrush="{StaticResource AccentRed}" BorderThickness="2">
+                            <Rectangle x:Name="fill" Margin="2" Fill="{StaticResource AccentRed}"
+                                       Visibility="Collapsed" />
+                        </Border>
+                        <ContentPresenter Margin="8,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="fill" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ===== Slider: thin red track + square thumb ===== -->
+    <Style TargetType="Slider">
+        <Setter Property="Foreground" Value="{StaticResource AccentRed}" />
+        <Setter Property="Height" Value="22" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Slider">
+                    <Grid VerticalAlignment="Center">
+                        <Border Height="3" Background="{StaticResource AccentRedDim}" />
+                        <Track x:Name="PART_Track">
+                            <Track.Thumb>
+                                <Thumb Width="10" Height="18" Cursor="Hand">
+                                    <Thumb.Template>
+                                        <ControlTemplate TargetType="Thumb">
+                                            <Rectangle Fill="{StaticResource AccentRed}" />
+                                        </ControlTemplate>
+                                    </Thumb.Template>
+                                </Thumb>
+                            </Track.Thumb>
+                        </Track>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 
 </ResourceDictionary>

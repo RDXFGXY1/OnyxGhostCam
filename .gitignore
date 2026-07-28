@@ -46,4 +46,8 @@ models/*.ort
 Thumbs.db
 .DS_Store
 
+# ---- Build / diagnostic artifacts ----
+/publish/
+/onyx-probe.exe
+
 .claude

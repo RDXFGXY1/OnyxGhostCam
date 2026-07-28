@@ -9,7 +9,8 @@
   <ItemGroup>
     <!-- ONNX Runtime with DirectML GPU acceleration (RTX 4050) -->
     <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.17.1" />
-    <!-- Windows Media Foundation / capture interop helpers come later via Onyx.Native -->
+    <!-- Webcam capture + image ops (mosaic, resize, drawing) -->
+    <PackageReference Include="OpenCvSharp4.Windows" Version="4.10.0.20241108" />
   </ItemGroup>
 
 </Project>

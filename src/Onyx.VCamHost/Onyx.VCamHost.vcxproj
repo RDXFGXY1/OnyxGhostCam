@@ -13,15 +13,15 @@
 
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
-    <ProjectGuid>{B1A2C3D4-E5F6-47A8-9B0C-1D2E3F4A5B6C}</ProjectGuid>
-    <RootNamespace>OnyxNative</RootNamespace>
+    <ProjectGuid>{C2B3D4E5-F6A7-48B9-AC0D-2E3F4A5B6C71}</ProjectGuid>
+    <RootNamespace>OnyxVCamHost</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
 
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
 
   <PropertyGroup Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <UseDebugLibraries Condition="'$(Configuration)'=='Debug'">true</UseDebugLibraries>
@@ -36,39 +36,15 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <!-- Static CRT: the Frame Server service loads this DLL and would not find
-           the debug CRT DLLs otherwise. -->
-      <RuntimeLibrary Condition="'$(Configuration)'=='Debug'">MultiThreadedDebug</RuntimeLibrary>
-      <RuntimeLibrary Condition="'$(Configuration)'=='Release'">MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
-      <!-- Media Foundation libraries for the virtual camera + media source -->
-      <AdditionalDependencies>mf.lib;mfplat.lib;mfreadwrite.lib;mfuuid.lib;mfsensorgroup.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ModuleDefinitionFile>Onyx.Native.def</ModuleDefinitionFile>
+      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>mf.lib;mfplat.lib;mfuuid.lib;mfsensorgroup.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
 
   <ItemGroup>
-    <ClCompile Include="VirtualCamera.cpp" />
-    <ClCompile Include="TestPattern.cpp" />
-    <ClCompile Include="OnyxMediaStream.cpp" />
-    <ClCompile Include="OnyxMediaSource.cpp" />
-    <ClCompile Include="OnyxMediaSourceActivate.cpp" />
-    <ClCompile Include="OnyxLog.cpp" />
-    <ClCompile Include="ClassFactory.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Onyx.Native.def" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="VirtualCamera.h" />
-    <ClInclude Include="TestPattern.h" />
-    <ClInclude Include="OnyxGuids.h" />
-    <ClInclude Include="OnyxMediaStream.h" />
-    <ClInclude Include="OnyxMediaSource.h" />
-    <ClInclude Include="OnyxMediaSourceActivate.h" />
-    <ClInclude Include="OnyxLog.h" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
 
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

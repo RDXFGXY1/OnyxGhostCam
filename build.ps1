@@ -29,10 +29,12 @@ function Find-MSBuild {
     return $msbuild
 }
 
-Write-Host "==> [1/2] Building native C++ (Onyx.Native) [$Configuration|x64]" -ForegroundColor Cyan
+Write-Host "==> [1/2] Building native C++ (Onyx.Native, Onyx.VCamHost) [$Configuration|x64]" -ForegroundColor Cyan
 $msbuild = Find-MSBuild
-& $msbuild "$root\src\Onyx.Native\Onyx.Native.vcxproj" /p:Configuration=$Configuration /p:Platform=x64 /v:minimal /nologo
-if ($LASTEXITCODE -ne 0) { throw "Native build failed." }
+foreach ($proj in @('src\Onyx.Native\Onyx.Native.vcxproj', 'src\Onyx.VCamHost\Onyx.VCamHost.vcxproj')) {
+    & $msbuild "$root\$proj" /p:Configuration=$Configuration /p:Platform=x64 /v:minimal /nologo
+    if ($LASTEXITCODE -ne 0) { throw "Native build failed: $proj" }
+}
 
 Write-Host "`n==> [2/2] Building managed C# (Core, App, Tests) [$Configuration]" -ForegroundColor Cyan
 & dotnet build "$root\Onyx.CSharp.slnf" -c $Configuration --nologo

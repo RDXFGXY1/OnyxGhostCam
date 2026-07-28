@@ -13,4 +13,9 @@
     <ProjectReference Include="..\Onyx.Core\Onyx.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Mat -> WriteableBitmap conversion for the live preview -->
+    <PackageReference Include="OpenCvSharp4.WpfExtensions" Version="4.10.0.20241108" />
+  </ItemGroup>
+
 </Project>
