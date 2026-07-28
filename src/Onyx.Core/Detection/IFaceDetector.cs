@@ -8,5 +8,8 @@ namespace Onyx.Core.Detection;
 /// </summary>
 public interface IFaceDetector : IDisposable
 {
+    /// <summary>Confidence threshold, 0..1. Lower = more sensitive.</summary>
+    float ScoreThreshold { get; set; }
+
     IReadOnlyList<Rect> Detect(Mat frame);
 }

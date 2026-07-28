@@ -16,6 +16,15 @@ public sealed class OnyxSettings
     public bool UseGpu { get; set; } = true;
     public bool ShieldOnStart { get; set; }
 
+    /// <summary>Blur the whole frame when no face is detected (fail-safe privacy).</summary>
+    public bool ParanoidMode { get; set; } = true;
+
+    /// <summary>Cover style: false = mosaic, true = solid black.</summary>
+    public bool SolidBlack { get; set; }
+
+    /// <summary>Face-detection confidence threshold (0.3 = sensitive, 0.9 = strict).</summary>
+    public double ScoreThreshold { get; set; } = 0.6;
+
     private static string FilePath
     {
         get

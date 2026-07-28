@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:c="clr-namespace:Onyx.App.Controls"
         Title="ONYX // GHOST CAM"
-        Height="760" Width="1320"
+        Height="720" Width="460"
         Background="{StaticResource BgBlack}"
         WindowStartupLocation="CenterScreen">
 
@@ -15,46 +15,24 @@
         </Grid.RowDefinitions>
 
         <!-- ===== Header ===== -->
-        <Grid Grid.Row="0" Margin="0,0,0,14">
+        <Grid Grid.Row="0" Margin="0,0,0,12">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="ONYX" FontFamily="{StaticResource HeaderFont}" FontSize="46"
+                <TextBlock Text="ONYX" FontFamily="{StaticResource HeaderFont}" FontSize="40"
                            Foreground="{StaticResource AccentRed}" />
-                <StackPanel VerticalAlignment="Center" Margin="14,4,0,0">
-                    <TextBlock Text="// GHOST CAM" Style="{StaticResource HudValue}" FontSize="15" />
-                    <TextBlock Text="LOCAL PRIVACY SHIELD · ZERO TELEMETRY" Style="{StaticResource HudLabel}" />
+                <StackPanel VerticalAlignment="Center" Margin="12,4,0,0">
+                    <TextBlock Text="// GHOST CAM" Style="{StaticResource HudValue}" FontSize="14" />
+                    <TextBlock Text="LOCAL PRIVACY SHIELD" Style="{StaticResource HudLabel}" />
                 </StackPanel>
             </StackPanel>
             <TextBlock x:Name="ShieldState" Text="● SHIELD OFF" HorizontalAlignment="Right"
                        VerticalAlignment="Center" Style="{StaticResource HudValue}"
-                       Foreground="{StaticResource TextDim}" FontSize="15" />
+                       Foreground="{StaticResource TextDim}" FontSize="14" />
         </Grid>
 
-        <!-- ===== Main: previews + control panel ===== -->
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="300" />
-            </Grid.ColumnDefinitions>
-
-            <!-- dual preview -->
-            <Grid Grid.Column="0" Margin="0,0,14,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-
-                <c:BracketFrame Grid.Column="0" Label="RAW FEED" Margin="0,0,7,0">
-                    <Image x:Name="RawImage" Stretch="Uniform" />
-                </c:BracketFrame>
-
-                <c:BracketFrame Grid.Column="1" Label="SHIELDED OUTPUT" Margin="7,0,0,0">
-                    <Image x:Name="PreviewImage" Stretch="Uniform" />
-                </c:BracketFrame>
-            </Grid>
-
-            <!-- control panel -->
-            <c:BracketFrame Grid.Column="1" Label="CONTROL" ShowScanlines="False">
-                <StackPanel Margin="16,26,16,16">
+        <!-- ===== Control panel (scrollable) ===== -->
+        <c:BracketFrame Grid.Row="1" Label="CONTROL" ShowScanlines="False">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="14,24,8,14">
+                <StackPanel Margin="2,2,10,2">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -67,21 +45,37 @@
                                 Click="OnStopClick" IsEnabled="False" />
                     </Grid>
 
-                    <Border Height="2" Background="{StaticResource AccentRedDim}" Margin="0,18" />
+                    <Border Height="2" Background="{StaticResource AccentRedDim}" Margin="0,16" />
 
                     <TextBlock Text="PRIVACY SHIELD" Style="{StaticResource HudLabel}" Margin="0,0,0,6" />
                     <ToggleButton x:Name="MosaicToggle" Content="ENGAGE SHIELD" Height="48"
                                   Checked="OnMosaicToggle" Unchecked="OnMosaicToggle" />
 
-                    <TextBlock Text="MOSAIC STRENGTH" Style="{StaticResource HudLabel}" Margin="0,20,0,4" />
+                    <CheckBox x:Name="VCamToggle" Content="OUTPUT TO GHOST CAM" Margin="0,14,0,0"
+                              Checked="OnVCamToggle" Unchecked="OnVCamToggle" />
+
+                    <Button x:Name="PopOutButton" Content="POP-OUT MONITOR" Height="36" Margin="0,14,0,0"
+                            Click="OnPopOutClick" />
+
+                    <Border Height="2" Background="{StaticResource AccentRedDim}" Margin="0,16" />
+
+                    <TextBlock Text="MOSAIC STRENGTH" Style="{StaticResource HudLabel}" Margin="0,0,0,4" />
                     <Slider x:Name="StrengthSlider" Minimum="4" Maximum="60" Value="16"
                             IsSnapToTickEnabled="True" TickFrequency="2" ValueChanged="OnStrengthChanged" />
+
+                    <CheckBox x:Name="SolidBlackToggle" Content="SOLID BLACK (else mosaic)" Margin="0,12,0,0"
+                              Checked="OnSolidBlackToggle" Unchecked="OnSolidBlackToggle" />
+                    <CheckBox x:Name="ParanoidToggle" Content="PARANOID (blur all if no face)" Margin="0,10,0,0" />
+
+                    <TextBlock Text="DETECTION SENSITIVITY" Style="{StaticResource HudLabel}" Margin="0,16,0,4" />
+                    <Slider x:Name="SensitivitySlider" Minimum="30" Maximum="90" Value="60"
+                            IsSnapToTickEnabled="True" TickFrequency="5" ValueChanged="OnSensitivityChanged" />
 
                     <TextBlock Text="DETECTION RATE  (1 / N FRAMES)" Style="{StaticResource HudLabel}" Margin="0,16,0,4" />
                     <Slider x:Name="DetectSlider" Minimum="1" Maximum="8" Value="3"
                             IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="OnDetectIntervalChanged" />
 
-                    <Border Height="2" Background="{StaticResource AccentRedDim}" Margin="0,18" />
+                    <Border Height="2" Background="{StaticResource AccentRedDim}" Margin="0,16" />
 
                     <Grid Margin="0,0,0,4">
                         <TextBlock Text="CAMERA INDEX" Style="{StaticResource HudLabel}" />
@@ -94,10 +88,8 @@
                     <CheckBox x:Name="HdToggle" Content="1080p INPUT (else 720p)" Margin="0,14,0,0" />
                     <CheckBox x:Name="GpuToggle" Content="GPU (DIRECTML)" IsChecked="True" Margin="0,10,0,0" />
                     <CheckBox x:Name="ShieldOnStartToggle" Content="SHIELD ON STARTUP" Margin="0,10,0,0" />
-                    <CheckBox x:Name="VCamToggle" Content="OUTPUT TO GHOST CAM" Margin="0,10,0,0"
-                              Checked="OnVCamToggle" Unchecked="OnVCamToggle" />
 
-                    <Border Height="2" Background="{StaticResource AccentRedDim}" Margin="0,18" />
+                    <Border Height="2" Background="{StaticResource AccentRedDim}" Margin="0,16" />
 
                     <Grid Margin="0,0,0,8">
                         <TextBlock Text="THROUGHPUT" Style="{StaticResource HudLabel}" />
@@ -110,16 +102,16 @@
                                    Style="{StaticResource HudValue}" />
                     </Grid>
                 </StackPanel>
-            </c:BracketFrame>
-        </Grid>
+            </ScrollViewer>
+        </c:BracketFrame>
 
         <!-- ===== Status bar ===== -->
-        <Border Grid.Row="2" Margin="0,14,0,0" Background="{StaticResource Panel}"
+        <Border Grid.Row="2" Margin="0,12,0,0" Background="{StaticResource Panel}"
                 BorderBrush="{StaticResource AccentRedDim}" BorderThickness="0,2,0,0" Padding="10,6">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="STATUS:" Style="{StaticResource HudLabel}" />
                 <TextBlock x:Name="StatusText" Text="idle" Style="{StaticResource HudValue}"
-                           Foreground="{StaticResource Text}" Margin="8,0,0,0" />
+                           Foreground="{StaticResource Text}" Margin="8,0,0,0" TextWrapping="Wrap" />
             </StackPanel>
         </Border>
     </Grid>

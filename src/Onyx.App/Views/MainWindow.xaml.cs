@@ -23,9 +23,7 @@ public partial class MainWindow : Window
     private readonly WebcamCapture _capture = new();
     private readonly MosaicProcessor _mosaic = new();
     private readonly object _frameLock = new();
-    private Mat? _pendingRaw;
     private Mat? _pendingProcessed;
-    private WriteableBitmap? _rawBitmap;
     private WriteableBitmap? _procBitmap;
     private volatile bool _mosaicEnabled;
 
@@ -36,6 +34,9 @@ public partial class MainWindow : Window
 
     private ObsVirtualCameraSink? _vcamSink;
     private readonly object _sinkLock = new();
+
+    private OutputPreviewWindow? _popup;
+    private volatile bool _paranoid = true;
 
     private int _frameCount;
     private readonly System.Diagnostics.Stopwatch _fpsClock = System.Diagnostics.Stopwatch.StartNew();
@@ -61,6 +62,7 @@ public partial class MainWindow : Window
         {
             SaveSettings(); _hudTimer.Stop(); _capture.Dispose();
             _detector?.Dispose();
+            _popup?.Close();
             lock (_sinkLock) { _vcamSink?.Dispose(); _vcamSink = null; }
         };
     }
@@ -73,6 +75,12 @@ public partial class MainWindow : Window
         HdToggle.IsChecked = _settings.Height >= 1080;
         GpuToggle.IsChecked = _settings.UseGpu;
         ShieldOnStartToggle.IsChecked = _settings.ShieldOnStart;
+        SolidBlackToggle.IsChecked = _settings.SolidBlack;
+        ParanoidToggle.IsChecked = _settings.ParanoidMode;
+        SensitivitySlider.Value = _settings.ScoreThreshold * 100.0;
+        _paranoid = _settings.ParanoidMode;
+        ParanoidToggle.Checked += (_, _) => _paranoid = true;
+        ParanoidToggle.Unchecked += (_, _) => _paranoid = false;
         MosaicToggle.IsChecked = _settings.ShieldOnStart; // triggers OnMosaicToggle
     }
 
@@ -85,6 +93,9 @@ public partial class MainWindow : Window
         _settings.Height = HdToggle.IsChecked == true ? 1080 : 720;
         _settings.UseGpu = GpuToggle.IsChecked == true;
         _settings.ShieldOnStart = ShieldOnStartToggle.IsChecked == true;
+        _settings.SolidBlack = SolidBlackToggle.IsChecked == true;
+        _settings.ParanoidMode = ParanoidToggle.IsChecked == true;
+        _settings.ScoreThreshold = SensitivitySlider.Value / 100.0;
         _settings.Save();
     }
 
@@ -136,6 +147,28 @@ public partial class MainWindow : Window
     private void OnStrengthChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         => _mosaic.BlockSize = (int)e.NewValue;
 
+    private void OnSolidBlackToggle(object sender, RoutedEventArgs e)
+        => _mosaic.Style = SolidBlackToggle.IsChecked == true ? BlurStyle.Black : BlurStyle.Mosaic;
+
+    private void OnSensitivityChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_detector is not null) { _detector.ScoreThreshold = (float)(e.NewValue / 100.0); }
+    }
+
+    private void OnPopOutClick(object sender, RoutedEventArgs e)
+    {
+        if (_popup is null)
+        {
+            _popup = new OutputPreviewWindow { Owner = this };
+            _popup.Closed += (_, _) => _popup = null;
+            _popup.Show();
+        }
+        else
+        {
+            _popup.Activate();
+        }
+    }
+
     private void OnVCamToggle(object sender, RoutedEventArgs e)
     {
         lock (_sinkLock)
@@ -183,6 +216,7 @@ public partial class MainWindow : Window
 
         int detectEveryN = (int)DetectSlider.Value; // read UI values on the UI thread
         bool useGpu = GpuToggle.IsChecked == true;
+        float scoreThreshold = (float)(SensitivitySlider.Value / 100.0);
         Task.Run(() =>
         {
             var path = FindModel();
@@ -197,13 +231,15 @@ public partial class MainWindow : Window
             }
             try
             {
-                var d = new UltraFaceDetector(path, useGpu);
+                var d = new UltraFaceDetector(path, useGpu) { ScoreThreshold = scoreThreshold };
                 _detector = d;
                 _tracker = new FaceTracker(d) { DetectEveryNFrames = detectEveryN };
                 Dispatcher.BeginInvoke(() =>
                 {
                     SetStatus("face detector ready");
-                    AccelText.Text = d.UsingGpu ? "GPU / DIRECTML" : "CPU";
+                    AccelText.Text = d.UsingGpu
+                        ? ShortGpu(d.GpuName)
+                        : "CPU";
                 });
             }
             catch (Exception ex)
@@ -229,13 +265,11 @@ public partial class MainWindow : Window
         return null;
     }
 
-    // Capture thread: keep a raw copy for the left preview, process the frame in
-    // place for the shielded output, then hand both to the UI.
+    // Capture thread: process the frame in place, push it to the virtual camera,
+    // and hand the newest to the pop-out monitor.
     private void OnFrameReady(Mat frame)
     {
         Interlocked.Increment(ref _frameCount);
-
-        Mat raw = frame.Clone();
 
         if (_mosaicEnabled)
         {
@@ -247,6 +281,11 @@ public partial class MainWindow : Window
                 if (faces.Count > 0)
                 {
                     _mosaic.ApplyRegions(frame, PadFaces(faces, frame.Size()));
+                }
+                else if (_paranoid)
+                {
+                    // Fail-safe: no face found, so cover the whole frame.
+                    _mosaic.ApplyFullFrame(frame);
                 }
             }
             else
@@ -267,8 +306,6 @@ public partial class MainWindow : Window
 
         lock (_frameLock)
         {
-            _pendingRaw?.Dispose();
-            _pendingRaw = raw;
             _pendingProcessed?.Dispose();
             _pendingProcessed = frame;
         }
@@ -287,34 +324,41 @@ public partial class MainWindow : Window
         return padded;
     }
 
-    // UI thread: display whatever frames are pending.
+    // UI thread: render the latest shielded frame into the pop-out monitor (only
+    // work needed when it's open).
     private void OnRendering(object? sender, EventArgs e)
     {
-        Mat? raw, processed;
+        Mat? processed;
         lock (_frameLock)
         {
-            raw = _pendingRaw; _pendingRaw = null;
             processed = _pendingProcessed; _pendingProcessed = null;
         }
+        if (processed is null) { return; }
 
-        if (raw is not null)
+        using (processed)
         {
-            using (raw) { UpdateBitmap(ref _rawBitmap, RawImage, raw); }
-        }
-        if (processed is not null)
-        {
-            using (processed) { UpdateBitmap(ref _procBitmap, PreviewImage, processed); }
+            if (_popup is null) { return; }
+            if (_procBitmap is null ||
+                _procBitmap.PixelWidth != processed.Width || _procBitmap.PixelHeight != processed.Height)
+            {
+                _procBitmap = new WriteableBitmap(processed.Width, processed.Height, 96, 96, PixelFormats.Bgr24, null);
+            }
+            WriteableBitmapConverter.ToWriteableBitmap(processed, _procBitmap);
+            _popup.ShowBitmap(_procBitmap);
         }
     }
 
-    private static void UpdateBitmap(ref WriteableBitmap? bmp, Image target, Mat frame)
+    // Compact a GPU name for the readout, e.g. "NVIDIA GeForce RTX 4050 Laptop GPU" -> "RTX 4050".
+    private static string ShortGpu(string name)
     {
-        if (bmp is null || bmp.PixelWidth != frame.Width || bmp.PixelHeight != frame.Height)
+        if (string.IsNullOrWhiteSpace(name)) { return "GPU / DIRECTML"; }
+        int rtx = name.IndexOf("RTX", StringComparison.OrdinalIgnoreCase);
+        if (rtx >= 0)
         {
-            bmp = new WriteableBitmap(frame.Width, frame.Height, 96, 96, PixelFormats.Bgr24, null);
-            target.Source = bmp;
+            var tail = name[rtx..].Split(' ');
+            return tail.Length >= 2 ? $"{tail[0]} {tail[1]}" : name[rtx..];
         }
-        WriteableBitmapConverter.ToWriteableBitmap(frame, bmp);
+        return name.Length > 22 ? name[..22] : name;
     }
 
     private void SetStatus(string text) => StatusText.Text = text;

@@ -23,6 +23,9 @@ public sealed class UltraFaceDetector : IFaceDetector
     /// <summary>True if the DirectML (GPU) provider was successfully enabled.</summary>
     public bool UsingGpu { get; }
 
+    /// <summary>Name of the GPU inference runs on (e.g. "NVIDIA GeForce RTX 4050 Laptop GPU").</summary>
+    public string GpuName { get; } = string.Empty;
+
     public UltraFaceDetector(string modelPath, bool useGpu = true)
     {
         if (!File.Exists(modelPath))
@@ -37,8 +40,11 @@ public sealed class UltraFaceDetector : IFaceDetector
         {
             try
             {
-                options.AppendExecutionProvider_DML(0);
+                // Pick the discrete GPU (RTX), not the integrated one at index 0.
+                var (adapterIndex, adapterName) = GpuSelector.SelectDiscrete();
+                options.AppendExecutionProvider_DML(adapterIndex);
                 UsingGpu = true;
+                GpuName = adapterName;
             }
             catch
             {

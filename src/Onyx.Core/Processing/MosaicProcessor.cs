@@ -6,6 +6,8 @@ namespace Onyx.Core.Processing;
 /// Applies a heavy mosaic (pixelation) effect by downscaling then upscaling with
 /// nearest-neighbour interpolation. Works in place on OpenCV <see cref="Mat"/> frames.
 /// </summary>
+public enum BlurStyle { Mosaic, Black }
+
 public sealed class MosaicProcessor
 {
     private int _blockSize = 16;
@@ -17,14 +19,17 @@ public sealed class MosaicProcessor
         set => _blockSize = Math.Max(2, value);
     }
 
-    /// <summary>Pixelate the entire frame in place.</summary>
+    /// <summary>Mosaic pixelation or a solid black box.</summary>
+    public BlurStyle Style { get; set; } = BlurStyle.Mosaic;
+
+    /// <summary>Cover the entire frame in place.</summary>
     public void ApplyFullFrame(Mat frame)
     {
         if (frame.Empty()) { return; }
-        Pixelate(frame);
+        Cover(frame);
     }
 
-    /// <summary>Pixelate only the given regions (e.g. detected faces) in place.</summary>
+    /// <summary>Cover only the given regions (e.g. detected faces) in place.</summary>
     public void ApplyRegions(Mat frame, IReadOnlyList<Rect> regions)
     {
         if (frame.Empty()) { return; }
@@ -34,8 +39,14 @@ public sealed class MosaicProcessor
             var roi = r.Intersect(bounds);
             if (roi.Width < 2 || roi.Height < 2) { continue; }
             using var region = new Mat(frame, roi);
-            Pixelate(region);
+            Cover(region);
         }
+    }
+
+    private void Cover(Mat target)
+    {
+        if (Style == BlurStyle.Black) { target.SetTo(Scalar.Black); }
+        else { Pixelate(target); }
     }
 
     private void Pixelate(Mat target)

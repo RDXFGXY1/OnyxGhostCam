@@ -1,0 +1,20 @@
+<Window x:Class="Onyx.App.Views.OutputPreviewWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ONYX // OUTPUT MONITOR"
+        Height="260" Width="400"
+        Background="{StaticResource BgBlack}"
+        Topmost="True"
+        WindowStartupLocation="Manual"
+        ShowInTaskbar="True">
+    <Border BorderBrush="{StaticResource AccentRed}" BorderThickness="2" Margin="4">
+        <Grid>
+            <Image x:Name="PopImage" Stretch="Uniform" />
+            <Border Background="{StaticResource AccentRed}" Padding="6,1"
+                    HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4">
+                <TextBlock Text="LIVE OUTPUT" FontFamily="{StaticResource HeaderFont}"
+                           FontSize="12" Foreground="{StaticResource BgBlack}" />
+            </Border>
+        </Grid>
+    </Border>
+</Window>

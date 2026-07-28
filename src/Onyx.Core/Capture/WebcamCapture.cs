@@ -45,8 +45,12 @@ public sealed class WebcamCapture : IDisposable
             return;
         }
 
+        // Request MJPG so the camera sends compressed frames — uncompressed
+        // (YUY2) over USB is bandwidth-limited to ~10 FPS at 720p/1080p.
+        _capture.Set(VideoCaptureProperties.FourCC, VideoWriter.FourCC('M', 'J', 'P', 'G'));
         _capture.Set(VideoCaptureProperties.FrameWidth, RequestedWidth);
         _capture.Set(VideoCaptureProperties.FrameHeight, RequestedHeight);
+        _capture.Set(VideoCaptureProperties.Fps, 30);
 
         _cts = new CancellationTokenSource();
         _thread = new Thread(() => CaptureLoop(_cts.Token))
