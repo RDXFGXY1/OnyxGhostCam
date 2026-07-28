@@ -94,6 +94,8 @@
                     <CheckBox x:Name="HdToggle" Content="1080p INPUT (else 720p)" Margin="0,14,0,0" />
                     <CheckBox x:Name="GpuToggle" Content="GPU (DIRECTML)" IsChecked="True" Margin="0,10,0,0" />
                     <CheckBox x:Name="ShieldOnStartToggle" Content="SHIELD ON STARTUP" Margin="0,10,0,0" />
+                    <CheckBox x:Name="VCamToggle" Content="OUTPUT TO GHOST CAM" Margin="0,10,0,0"
+                              Checked="OnVCamToggle" Unchecked="OnVCamToggle" />
 
                     <Border Height="2" Background="{StaticResource AccentRedDim}" Margin="0,18" />
 

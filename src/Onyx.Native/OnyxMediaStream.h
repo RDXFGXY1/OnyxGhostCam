@@ -8,7 +8,6 @@
 #include <ks.h>
 #include <ksproxy.h>
 #include <cstdint>
-#include "OnyxAgile.h"
 
 // Onyx media stream (milestone 1b).
 //
@@ -23,8 +22,7 @@ class OnyxMediaStream
           Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
           Microsoft::WRL::ChainInterfaces<IMFMediaStream2, IMFMediaStream, IMFMediaEventGenerator>,
           IMFAsyncCallback,
-          IKsControl,
-          Microsoft::WRL::CloakedIid<IMarshal>>
+          IKsControl>
 {
 public:
     OnyxMediaStream();
@@ -66,12 +64,10 @@ public:
     // Frame Server requires to recognise this as a video-capture stream.
     HRESULT CopyStreamAttributes(IMFAttributes** ppAttributes);
 
-    // ---- IMarshal (agility via free-threaded marshaler) ----
-    ONYX_AGILE_MEMBERS()
-
 private:
     HRESULT CheckShutdown() const;
     HRESULT DeliverSample(IUnknown* token);
+    HRESULT SetStreamIdentity(IMFAttributes* store);
 
     Microsoft::WRL::Wrappers::SRWLock       _lock;
     Microsoft::WRL::ComPtr<IMFMediaSource>  _parent;

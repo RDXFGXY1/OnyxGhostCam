@@ -15,14 +15,20 @@ void Log(const char* fmt, ...)
     va_end(args);
     if (n < 0) { return; }
 
-    // Prefix: time + process/thread id.
+    // Determine the host process image name (frameserver? probe? host?).
+    char exePath[MAX_PATH] = {};
+    GetModuleFileNameA(nullptr, exePath, MAX_PATH);
+    const char* exe = exePath;
+    for (const char* p = exePath; *p; ++p) { if (*p == '\\' || *p == '/') { exe = p + 1; } }
+
+    // Prefix: time + process image + process/thread id.
     SYSTEMTIME st;
     GetLocalTime(&st);
-    char line[640];
+    char line[720];
     int m = _snprintf_s(line, sizeof(line), _TRUNCATE,
-        "%02d:%02d:%02d.%03d [pid=%lu tid=%lu] %s\r\n",
+        "%02d:%02d:%02d.%03d [%s pid=%lu tid=%lu] %s\r\n",
         st.wHour, st.wMinute, st.wSecond, st.wMilliseconds,
-        GetCurrentProcessId(), GetCurrentThreadId(), msg);
+        exe, GetCurrentProcessId(), GetCurrentThreadId(), msg);
     if (m < 0) { return; }
 
     HANDLE h = CreateFileA("C:\\ProgramData\\Onyx\\onyx.log",

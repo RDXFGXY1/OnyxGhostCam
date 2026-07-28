@@ -19,9 +19,9 @@ constexpr unsigned kFrameHeight = 720;
 constexpr unsigned kFrameRateNum = 30;
 constexpr unsigned kFrameRateDen = 1;
 
-// RGB32 (BGRA) => 4 bytes per pixel.
-constexpr unsigned kBytesPerPixel = 4;
-constexpr unsigned kFrameStride   = kFrameWidth * kBytesPerPixel;
-constexpr unsigned kFrameSize     = kFrameStride * kFrameHeight;
+// NV12: Y plane (w*h) + interleaved UV plane (w*h/2) => w*h*3/2 total.
+// The Frame Server's MASTER capture pipeline expects this standard camera format.
+constexpr unsigned kFrameStride = kFrameWidth;                       // NV12 Y-plane stride
+constexpr unsigned kFrameSize   = kFrameWidth * kFrameHeight * 3 / 2; // NV12 total bytes
 
 }  // namespace onyx

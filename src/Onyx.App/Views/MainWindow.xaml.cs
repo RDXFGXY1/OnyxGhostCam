@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using OpenCvSharp.WpfExtensions;
 using Onyx.Core.Capture;
 using Onyx.Core.Detection;
+using Onyx.Core.Interop;
 using Onyx.Core.Processing;
 using Onyx.Core.Settings;
 using Mat = OpenCvSharp.Mat;
@@ -33,6 +34,9 @@ public partial class MainWindow : Window
     private volatile bool _detectorInit;
     private volatile int _lastFaceCount;
 
+    private ObsVirtualCameraSink? _vcamSink;
+    private readonly object _sinkLock = new();
+
     private int _frameCount;
     private readonly System.Diagnostics.Stopwatch _fpsClock = System.Diagnostics.Stopwatch.StartNew();
     private readonly DispatcherTimer _hudTimer;
@@ -53,7 +57,12 @@ public partial class MainWindow : Window
 
         ApplySettingsToUi();
 
-        Closed += (_, _) => { SaveSettings(); _hudTimer.Stop(); _capture.Dispose(); _detector?.Dispose(); };
+        Closed += (_, _) =>
+        {
+            SaveSettings(); _hudTimer.Stop(); _capture.Dispose();
+            _detector?.Dispose();
+            lock (_sinkLock) { _vcamSink?.Dispose(); _vcamSink = null; }
+        };
     }
 
     private void ApplySettingsToUi()
@@ -126,6 +135,34 @@ public partial class MainWindow : Window
 
     private void OnStrengthChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         => _mosaic.BlockSize = (int)e.NewValue;
+
+    private void OnVCamToggle(object sender, RoutedEventArgs e)
+    {
+        lock (_sinkLock)
+        {
+            if (VCamToggle.IsChecked == true)
+            {
+                var sink = new ObsVirtualCameraSink(1280, 720, 30);
+                if (sink.TryStart())
+                {
+                    _vcamSink = sink;
+                    SetStatus("output -> OBS Virtual Camera (select it in your app)");
+                }
+                else
+                {
+                    sink.Dispose();
+                    VCamToggle.IsChecked = false;
+                    SetStatus("OBS Virtual Camera busy (is OBS running?) or OBS not installed");
+                }
+            }
+            else
+            {
+                _vcamSink?.Dispose();
+                _vcamSink = null;
+                SetStatus("output stopped");
+            }
+        }
+    }
 
     private void OnDetectIntervalChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
@@ -220,6 +257,12 @@ public partial class MainWindow : Window
         else
         {
             _lastFaceCount = 0;
+        }
+
+        // Push the shielded frame out to the virtual camera, if enabled.
+        lock (_sinkLock)
+        {
+            _vcamSink?.WriteFrame(frame);
         }
 
         lock (_frameLock)

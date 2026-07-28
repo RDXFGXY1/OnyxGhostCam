@@ -4,7 +4,6 @@
 #include <mfidl.h>
 #include <mfapi.h>
 #include <wrl.h>
-#include "OnyxAgile.h"
 
 // Activation object for the Onyx media source (milestone 1c fix).
 //
@@ -18,8 +17,7 @@ namespace onyx {
 class OnyxMediaSourceActivate
     : public Microsoft::WRL::RuntimeClass<
           Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-          Microsoft::WRL::ChainInterfaces<IMFActivate, IMFAttributes>,
-          Microsoft::WRL::CloakedIid<IMarshal>>
+          Microsoft::WRL::ChainInterfaces<IMFActivate, IMFAttributes>>
 {
 public:
     OnyxMediaSourceActivate();
@@ -61,9 +59,6 @@ public:
     IFACEMETHODIMP GetCount(UINT32* c) override;
     IFACEMETHODIMP GetItemByIndex(UINT32 i, GUID* k, PROPVARIANT* v) override;
     IFACEMETHODIMP CopyAllItems(IMFAttributes* dest) override;
-
-    // ---- IMarshal (agility via free-threaded marshaler) ----
-    ONYX_AGILE_MEMBERS()
 
 private:
     Microsoft::WRL::ComPtr<IMFAttributes>   _attributes;

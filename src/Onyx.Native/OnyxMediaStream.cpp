@@ -17,7 +17,7 @@ static HRESULT CreateOnyxMediaType(IMFMediaType** ppType)
 
     hr = type->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
     if (FAILED(hr)) { return hr; }
-    hr = type->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_RGB32);
+    hr = type->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_NV12);
     if (FAILED(hr)) { return hr; }
     hr = type->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
     if (FAILED(hr)) { return hr; }
@@ -46,10 +46,7 @@ HRESULT OnyxMediaStream::RuntimeClassInitialize(IMFMediaSource* parent, DWORD st
     _parent = parent;
     _streamId = streamId;
 
-    HRESULT hr = InitAgile();
-    if (FAILED(hr)) { return hr; }
-
-    hr = MFCreateEventQueue(&_eventQueue);
+    HRESULT hr = MFCreateEventQueue(&_eventQueue);
     if (FAILED(hr)) { return hr; }
 
     hr = CreateOnyxMediaType(&_mediaType);
@@ -66,16 +63,28 @@ HRESULT OnyxMediaStream::RuntimeClassInitialize(IMFMediaSource* parent, DWORD st
     hr = handler->SetCurrentMediaType(_mediaType.Get());
     if (FAILED(hr)) { return hr; }
 
-    // Attributes that identify this stream to the Frame Server as a shared
-    // video-capture stream. Without these, Start fails MF_E_ATTRIBUTENOTFOUND.
-    hr = MFCreateAttributes(&_streamAttributes, 3);
+    // These identify the stream to the Frame Server as a SHARED video-capture
+    // stream. They must be set on BOTH the stream's own attribute store (returned
+    // via GetStreamAttributes) AND the stream descriptor itself (which lives in
+    // the presentation descriptor the Frame Server inspects). Setting them only on
+    // a side store is why the Frame Server abandoned the source before Start.
+    hr = MFCreateAttributes(&_streamAttributes, 4);
     if (FAILED(hr)) { return hr; }
-    hr = _streamAttributes->SetGUID(MF_DEVICESTREAM_STREAM_CATEGORY, PINNAME_VIDEO_CAPTURE);
+    hr = SetStreamIdentity(_streamAttributes.Get());
     if (FAILED(hr)) { return hr; }
-    hr = _streamAttributes->SetUINT32(MF_DEVICESTREAM_STREAM_ID, _streamId);
-    if (FAILED(hr)) { return hr; }
-    hr = _streamAttributes->SetUINT32(MF_DEVICESTREAM_FRAMESERVER_SHARED, 1);
+    hr = SetStreamIdentity(_streamDescriptor.Get());
     return hr;
+}
+
+HRESULT OnyxMediaStream::SetStreamIdentity(IMFAttributes* store)
+{
+    HRESULT hr = store->SetGUID(MF_DEVICESTREAM_STREAM_CATEGORY, PINNAME_VIDEO_CAPTURE);
+    if (FAILED(hr)) { return hr; }
+    hr = store->SetUINT32(MF_DEVICESTREAM_STREAM_ID, _streamId);
+    if (FAILED(hr)) { return hr; }
+    hr = store->SetUINT32(MF_DEVICESTREAM_FRAMESERVER_SHARED, 1);
+    if (FAILED(hr)) { return hr; }
+    return store->SetUINT32(MF_DEVICESTREAM_ATTRIBUTE_FRAMESOURCE_TYPES, MFFrameSourceTypes_Color);
 }
 
 HRESULT OnyxMediaStream::CopyStreamAttributes(IMFAttributes** ppAttributes)
@@ -175,7 +184,7 @@ HRESULT OnyxMediaStream::DeliverSample(IUnknown* token)
     DWORD maxLen = 0;
     hr = buffer->Lock(&data, &maxLen, nullptr);
     if (FAILED(hr)) { return hr; }
-    GenerateTestPattern(data, kFrameWidth, kFrameHeight, _frameIndex++);
+    GenerateTestPatternNV12(data, kFrameWidth, kFrameHeight, _frameIndex++);
     buffer->Unlock();
     hr = buffer->SetCurrentLength(kFrameSize);
     if (FAILED(hr)) { return hr; }

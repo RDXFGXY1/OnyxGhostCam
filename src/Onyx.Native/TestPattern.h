@@ -15,4 +15,8 @@ namespace onyx {
 // `frameIndex` advances the moving sweep bar (any monotonically increasing int).
 void GenerateTestPattern(uint8_t* dst, int width, int height, uint64_t frameIndex);
 
+// Writes one NV12 frame (Y plane w*h, then interleaved UV plane w*h/2) into `dst`.
+// `dst` must hold at least width * height * 3 / 2 bytes. Same bars + sweep pattern.
+void GenerateTestPatternNV12(uint8_t* dst, int width, int height, uint64_t frameIndex);
+
 }  // namespace onyx

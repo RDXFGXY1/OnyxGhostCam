@@ -51,3 +51,5 @@ Thumbs.db
 /onyx-probe.exe
 
 .claude
+# Generated MSIX package layout
+/packaging/layout/

@@ -9,7 +9,6 @@
 #include <ksproxy.h>
 
 #include "OnyxMediaStream.h"
-#include "OnyxAgile.h"
 
 // Onyx software media source (milestone 1b).
 //
@@ -24,8 +23,7 @@ class OnyxMediaSource
           Microsoft::WRL::ChainInterfaces<IMFMediaSourceEx, IMFMediaSource, IMFMediaEventGenerator>,
           IMFGetService,
           IKsControl,
-          IMFSampleAllocatorControl,
-          Microsoft::WRL::CloakedIid<IMarshal>>
+          IMFSampleAllocatorControl>
 {
 public:
     OnyxMediaSource();
@@ -65,9 +63,6 @@ public:
     IFACEMETHODIMP SetDefaultAllocator(DWORD dwOutputStreamID, IUnknown* pAllocator) override;
     IFACEMETHODIMP GetAllocatorUsage(DWORD dwOutputStreamID, DWORD* pdwInputStreamID,
                                      MFSampleAllocatorUsage* peUsage) override;
-
-    // ---- IMarshal (agility via free-threaded marshaler) ----
-    ONYX_AGILE_MEMBERS()
 
 private:
     HRESULT CheckShutdown() const;

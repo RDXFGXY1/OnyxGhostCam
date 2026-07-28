@@ -30,11 +30,18 @@ public sealed class WebcamCapture : IDisposable
         if (IsRunning) { return; }
 
         _capture = new VideoCapture(CameraIndex, VideoCaptureAPIs.DSHOW);
+        if (!_capture.IsOpened() && CameraIndex != 0)
+        {
+            // Requested camera missing (e.g. a stale saved index) - fall back to 0.
+            _capture.Dispose();
+            CameraIndex = 0;
+            _capture = new VideoCapture(0, VideoCaptureAPIs.DSHOW);
+        }
         if (!_capture.IsOpened())
         {
             _capture.Dispose();
             _capture = null;
-            Error?.Invoke($"Could not open camera index {CameraIndex}.");
+            Error?.Invoke($"Could not open a camera (tried index {CameraIndex}).");
             return;
         }
 

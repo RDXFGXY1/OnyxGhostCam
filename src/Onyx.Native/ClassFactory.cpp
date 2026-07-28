@@ -15,6 +15,7 @@
 #include <initguid.h>
 #include "OnyxGuids.h"
 #include "OnyxMediaSourceActivate.h"
+#include "OnyxLog.h"
 
 using namespace Microsoft::WRL;
 
@@ -54,6 +55,7 @@ public:
         if (!ppv)  { return E_POINTER; }
         *ppv = nullptr;
 
+        onyx::Log("ClassFactory::CreateInstance");
         // Return an activation object; the Frame Server calls ActivateObject()
         // on it to obtain the actual OnyxMediaSource.
         ComPtr<onyx::OnyxMediaSourceActivate> activate;

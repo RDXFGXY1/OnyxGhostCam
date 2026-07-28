@@ -10,8 +10,6 @@ OnyxMediaSourceActivate::OnyxMediaSourceActivate() = default;
 
 HRESULT OnyxMediaSourceActivate::RuntimeClassInitialize()
 {
-    HRESULT hr = InitAgile();
-    if (FAILED(hr)) { return hr; }
     return MFCreateAttributes(&_attributes, 1);
 }
 

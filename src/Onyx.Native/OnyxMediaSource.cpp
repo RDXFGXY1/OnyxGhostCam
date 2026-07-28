@@ -11,18 +11,35 @@ OnyxMediaSource::OnyxMediaSource() = default;
 
 HRESULT OnyxMediaSource::RuntimeClassInitialize()
 {
-    HRESULT hr = InitAgile();
+    HRESULT hr = MFCreateEventQueue(&_eventQueue);
     if (FAILED(hr)) { return hr; }
 
-    hr = MFCreateEventQueue(&_eventQueue);
-    if (FAILED(hr)) { return hr; }
-
-    hr = MFCreateAttributes(&_attributes, 1);
+    hr = MFCreateAttributes(&_attributes, 2);
     if (FAILED(hr)) { return hr; }
     // Identify this as a video-capture device source.
     hr = _attributes->SetGUID(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE,
                               MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID);
     if (FAILED(hr)) { return hr; }
+
+    // Sensor profile collection - REQUIRED by the Frame Server. A "Legacy"
+    // profile is mandatory; without it the Frame Server validates the source,
+    // finds no profiles, and abandons it before ever calling Start().
+    {
+        ComPtr<IMFSensorProfileCollection> profiles;
+        hr = MFCreateSensorProfileCollection(&profiles);
+        if (FAILED(hr)) { return hr; }
+
+        ComPtr<IMFSensorProfile> legacy;
+        hr = MFCreateSensorProfile(KSCAMERAPROFILE_Legacy, 0, nullptr, &legacy);
+        if (FAILED(hr)) { return hr; }
+        hr = legacy->AddProfileFilter(0, L"((RES==;FRT<=30,1;SUT==))");
+        if (FAILED(hr)) { return hr; }
+        hr = profiles->AddProfile(legacy.Get());
+        if (FAILED(hr)) { return hr; }
+
+        hr = _attributes->SetUnknown(MF_DEVICEMFT_SENSORPROFILE_COLLECTION, profiles.Get());
+        if (FAILED(hr)) { return hr; }
+    }
 
     // The single video stream (id 0).
     hr = MakeAndInitialize<OnyxMediaStream>(&_stream, this, /*streamId*/ 0);
@@ -210,12 +227,13 @@ IFACEMETHODIMP OnyxMediaSource::SetD3DManager(IUnknown* pManager)
 
 // ---- IMFGetService ----
 
-IFACEMETHODIMP OnyxMediaSource::GetService(REFGUID guidService, REFIID riid, LPVOID* ppvObject)
+IFACEMETHODIMP OnyxMediaSource::GetService(REFGUID guidService, REFIID, LPVOID* ppvObject)
 {
     if (!ppvObject) { return E_POINTER; }
-    HRESULT hr = QueryInterface(riid, ppvObject);
-    onyx::Log("Source::GetService svc={%08lX} hr=0x%08lX", guidService.Data1, hr);
-    return hr;
+    *ppvObject = nullptr;
+    onyx::Log("Source::GetService svc={%08lX}", guidService.Data1);
+    // Match the reference: we expose no services.
+    return MF_E_UNSUPPORTED_SERVICE;
 }
 
 // ---- IKsControl ----
@@ -229,40 +247,9 @@ IFACEMETHODIMP OnyxMediaSource::KsProperty(PKSPROPERTY prop, ULONG propLen,
     onyx::Log("Source::KsProperty set={%08lX} id=%lu flags=%lu",
               prop->Set.Data1, prop->Id, prop->Flags);
 
-    // The Frame Server queries the camera PRIVACY control before it will stream
-    // (Windows 11 privacy enforcement). We must report privacy is OFF, otherwise
-    // it fails safe and refuses to start the stream.
-    if (IsEqualGUID(prop->Set, PROPSETID_VIDCAP_CAMERACONTROL) &&
-        prop->Id == KSPROPERTY_CAMERACONTROL_PRIVACY)
-    {
-        if (prop->Flags & KSPROPERTY_TYPE_BASICSUPPORT)
-        {
-            if (dataLen < sizeof(ULONG))
-            {
-                if (bytesReturned) { *bytesReturned = sizeof(ULONG); }
-                return HRESULT_FROM_WIN32(ERROR_MORE_DATA);
-            }
-            *reinterpret_cast<ULONG*>(data) = KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_BASICSUPPORT;
-            if (bytesReturned) { *bytesReturned = sizeof(ULONG); }
-            return S_OK;
-        }
-        if (prop->Flags & KSPROPERTY_TYPE_GET)
-        {
-            if (dataLen < sizeof(KSPROPERTY_CAMERACONTROL_S))
-            {
-                if (bytesReturned) { *bytesReturned = sizeof(KSPROPERTY_CAMERACONTROL_S); }
-                return HRESULT_FROM_WIN32(ERROR_MORE_DATA);
-            }
-            auto* s = reinterpret_cast<KSPROPERTY_CAMERACONTROL_S*>(data);
-            ZeroMemory(s, sizeof(*s));
-            s->Value = 0;  // 0 = privacy OFF (streaming allowed)
-            s->Flags = KSPROPERTY_CAMERACONTROL_FLAGS_MANUAL;
-            s->Capabilities = KSPROPERTY_CAMERACONTROL_FLAGS_MANUAL;
-            if (bytesReturned) { *bytesReturned = sizeof(KSPROPERTY_CAMERACONTROL_S); }
-            return S_OK;
-        }
-    }
-
+    // We expose no KS control sets. ERROR_SET_NOT_FOUND is the driver-standard
+    // "no handler" reply the Frame Server expects (matches the reference).
+    (void)data; (void)dataLen;
     return HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND);
 }
 
