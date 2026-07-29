@@ -76,3 +76,10 @@ desktop.ini
 
 # Nested standalone repo (github.com/RDXFGXY1/OnyxGhostCam) - not part of this repo
 /OnyxGhostCam/
+\
+# ---- Secrets / local scripts (never commit tokens) ----
+run.py
+.env
+*.env
+*.token
+secrets.json
