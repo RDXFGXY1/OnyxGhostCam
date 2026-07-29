@@ -1,3 +1,7 @@
+# ============================================================
+#  GhostCam — Null Studio · KYROS
+# ============================================================
+
 # ---- Build output ----
 [Bb]in/
 [Oo]bj/
@@ -10,8 +14,9 @@ x86/
 *.suo
 *.userosscache
 *.sln.docstates
+*_wpftmp.*
 
-# ---- Visual Studio ----
+# ---- Visual Studio / native ----
 .vs/
 *.vcxproj.user
 *.VC.db
@@ -22,6 +27,13 @@ x86/
 *.opensdf
 *.sdf
 *.cachefile
+*.ilk
+*.pdb
+*.idb
+*.exp
+*.lib
+*.obj
+*.tlog
 
 # ---- .NET / NuGet ----
 project.lock.json
@@ -32,24 +44,32 @@ artifacts/
 .packages/
 packages/
 
-# ---- Rider / VS Code ----
+# ---- Editors ----
 .idea/
 .vscode/
+.claude/
 
-# ---- Models (large binaries — bundled at packaging, not in git) ----
+# ---- Distribution output (rebuild with make-installer.ps1) ----
+/publish/
+/dist/
+
+# ---- Generated assets (rebuild with tools/make-icon.ps1) ----
+# Source art lives in image/ and IS tracked; the .ico is derived from it.
+/packaging/onyx.ico
+/packaging/layout/
+
+# ---- ML models (large; fetch with get-model.ps1) ----
 models/*.onnx
 models/*.ort
 !models/README.md
 
-# ---- Misc ----
+# ---- Diagnostics / scratch ----
 *.log
-Thumbs.db
-.DS_Store
-
-# ---- Build / diagnostic artifacts ----
-/publish/
 /onyx-probe.exe
+*.tmp
+*.bmp
 
-.claude
-# Generated MSIX package layout
-/packaging/layout/
+# ---- OS ----
+Thumbs.db
+desktop.ini
+.DS_Store

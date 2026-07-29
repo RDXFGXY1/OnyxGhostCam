@@ -19,4 +19,11 @@ public partial class OutputPreviewWindow : Window
     {
         if (!ReferenceEquals(PopImage.Source, bmp)) { PopImage.Source = bmp; }
     }
+
+    private void OnDrag(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (e.ButtonState == System.Windows.Input.MouseButtonState.Pressed) { DragMove(); }
+    }
+
+    private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
 }

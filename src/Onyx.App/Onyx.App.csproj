@@ -4,13 +4,29 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+    <!-- WinForms interop is used only for the system-tray NotifyIcon -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <RootNamespace>Onyx.App</RootNamespace>
-    <AssemblyName>Onyx</AssemblyName>
+    <AssemblyName>GhostCam</AssemblyName>
+    <Product>GhostCam</Product>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>..\..\packaging\onyx.ico</ApplicationIcon>
+    <AssemblyTitle>GhostCam</AssemblyTitle>
+    <Company>Null Studio</Company>
+    <Authors>KYROS</Authors>
+    <Copyright>© Null Studio · KYROS</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Onyx.Core\Onyx.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- WinForms is referenced only for the tray NotifyIcon; drop its implicit
+         global usings so its types don't collide with the WPF ones. -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
   </ItemGroup>
 
   <ItemGroup>

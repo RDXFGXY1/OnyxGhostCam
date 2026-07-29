@@ -1,0 +1,41 @@
+GHOSTCAM — LICENSE
+
+Copyright (c) 2026 Null Studio · KYROS
+All rights reserved.
+
+1. GRANT
+   You are granted a personal, non-exclusive licence to install and
+   use GhostCam on computers you own or control.
+
+2. RESTRICTIONS
+   You may not sell, sublicense, or redistribute this software as
+   your own work, nor remove or alter the Null Studio / KYROS
+   attribution contained within it.
+
+3. PRIVACY
+   GhostCam processes all video locally on your machine. It makes no
+   network connections, collects no telemetry, and stores no video
+   or images.
+
+4. THIRD-PARTY COMPONENTS
+   This software makes use of open-source components, including
+   OpenCV (Apache 2.0), ONNX Runtime (MIT), and the UltraFace
+   detection model (MIT). GhostCam can route its output through the
+   OBS Studio virtual camera (GPL-2.0), which is installed and
+   licensed separately by the user.
+
+5. NO WARRANTY
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+   OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+   HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY
+   ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+   USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+6. PRIVACY RESPONSIBILITY
+   GhostCam is a privacy aid, not a guarantee. You remain responsible
+   for verifying your own output (use the pop-out monitor) before
+   and during any broadcast.
+
+By installing this software you accept these terms.

@@ -1,0 +1,68 @@
+<Window x:Class="Onyx.App.Views.OverlayEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="GHOSTCAM // OVERLAY EDITOR"
+        Height="540" Width="960"
+        Background="{StaticResource BgBlack}"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="16">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="260" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Canvas -->
+        <StackPanel Grid.Column="0">
+            <TextBlock Text="STAGE — DRAG TO MOVE" Style="{StaticResource HudLabel}" Margin="0,0,0,8" />
+            <Border BorderBrush="{StaticResource AccentRed}" BorderThickness="2"
+                    Width="640" Height="360" HorizontalAlignment="Left">
+                <Grid>
+                    <Image x:Name="FeedImage" Stretch="Uniform" />
+                    <Canvas x:Name="EditCanvas" Width="640" Height="360" Background="#01000000" />
+                </Grid>
+            </Border>
+            <TextBlock x:Name="Hint" Text="click ADD TEXT / ADD IMAGE, then drag elements on the stage"
+                       Style="{StaticResource HudLabel}" Margin="0,8,0,0" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!-- Tools -->
+        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Margin="16,0,0,0">
+            <StackPanel>
+                <TextBlock Text="◤ ADD" Style="{StaticResource HudSection}" Margin="0,0,0,8" />
+                <TextBox x:Name="NewText" Margin="0,0,0,6" />
+                <Button Content="ADD TEXT" Height="34" Click="OnAddText" />
+                <Button Content="ADD IMAGE…" Height="34" Margin="0,8,0,0" Click="OnAddImage" />
+
+                <TextBlock Text="◤ SELECTED" Style="{StaticResource HudSection}" />
+                <StackPanel x:Name="Props" Visibility="Collapsed">
+                    <TextBlock x:Name="SelName" Style="{StaticResource HudValue}" Margin="0,0,0,8" TextWrapping="Wrap" />
+
+                    <StackPanel x:Name="TextRow">
+                        <TextBlock Text="TEXT" Style="{StaticResource HudLabel}" Margin="0,0,0,4" />
+                        <TextBox x:Name="SelText" TextChanged="OnSelTextChanged" Margin="0,0,0,4" />
+                        <Button x:Name="ColorBtn" Content="COLOR: WHITE" Height="30" Margin="0,0,0,8" Click="OnCycleColor" />
+                    </StackPanel>
+
+                    <Grid Margin="0,0,0,8">
+                        <TextBlock Text="SIZE" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="−" Width="30" Height="28" Click="OnSizeDown" />
+                            <TextBlock x:Name="SizeVal" Text="--" Style="{StaticResource HudValue}" Width="52" TextAlignment="Center" VerticalAlignment="Center" />
+                            <Button Content="+" Width="30" Height="28" Click="OnSizeUp" />
+                        </StackPanel>
+                    </Grid>
+                    <Grid Margin="0,0,0,10">
+                        <TextBlock Text="OPACITY" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="−" Width="30" Height="28" Click="OnOpacityDown" />
+                            <TextBlock x:Name="OpacityVal" Text="--" Style="{StaticResource HudValue}" Width="52" TextAlignment="Center" VerticalAlignment="Center" />
+                            <Button Content="+" Width="30" Height="28" Click="OnOpacityUp" />
+                        </StackPanel>
+                    </Grid>
+                    <Button Content="DELETE" Height="32" Click="OnDelete" />
+                </StackPanel>
+                <TextBlock x:Name="NoSel" Text="nothing selected" Style="{StaticResource HudLabel}" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>

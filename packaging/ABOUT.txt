@@ -1,0 +1,50 @@
+================================================================
+  GHOSTCAM
+  Local privacy camera
+================================================================
+
+  Created by   :  KYROS
+  Studio       :  Null Studio
+  Version      :  1.0.0
+
+----------------------------------------------------------------
+  WHAT IT DOES
+----------------------------------------------------------------
+
+  GhostCam sits between your webcam and every other app. It finds
+  your face in real time and covers it (mosaic, black box, ghost
+  or CENSORED bar), then publishes the protected feed as a
+  virtual camera that Discord, Zoom, Teams, OBS and browsers can
+  all select.
+
+  Features
+    - Real-time face detection, GPU accelerated (DirectML)
+    - Cover styles: mosaic / black / ghost / censored
+    - PARANOID fail-safe: covers everything if no face is found
+    - Tactical HUD overlay, scanline and glitch filters
+    - Overlay editor: add your own text and images, drag to place
+    - Watermark: GHOSTCAM // your name
+    - Procedural cockpit controls with interlocks and a
+      MASTER KILL
+    - Pop-out monitor and system-tray operation
+
+----------------------------------------------------------------
+  PRIVACY
+----------------------------------------------------------------
+
+  Fully offline. Zero telemetry. Zero network calls. All face
+  detection runs locally on your own machine, and no frames are
+  ever stored or transmitted by GhostCam.
+
+----------------------------------------------------------------
+  REQUIREMENTS
+----------------------------------------------------------------
+
+  - Windows 10 / 11 (64-bit)
+  - A webcam
+  - OBS Studio installed (only for its virtual-camera driver;
+    OBS itself does not need to be running)
+
+================================================================
+  © Null Studio · KYROS
+================================================================

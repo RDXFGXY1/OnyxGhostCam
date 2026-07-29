@@ -19,8 +19,30 @@ public sealed class OnyxSettings
     /// <summary>Blur the whole frame when no face is detected (fail-safe privacy).</summary>
     public bool ParanoidMode { get; set; } = true;
 
-    /// <summary>Cover style: false = mosaic, true = solid black.</summary>
-    public bool SolidBlack { get; set; }
+    /// <summary>Cover style index: 0 Mosaic, 1 Black, 2 Ghost, 3 Censored.</summary>
+    public int CoverStyle { get; set; }
+
+    /// <summary>Output filter index: 0 None, 1 Scanlines, 2 Glitch.</summary>
+    public int OutputEffect { get; set; }
+
+    /// <summary>Tactical HUD overlay on the output.</summary>
+    public bool Hud { get; set; }
+
+    /// <summary>Cockpit sound effects.</summary>
+    public bool Sound { get; set; }
+
+    /// <summary>Horizontally flip the final composed output (video + text).</summary>
+    public bool Mirror { get; set; }
+
+    /// <summary>Mirror only the drawn elements (text/overlays/HUD), leaving the video as-is.</summary>
+    public bool MirrorText { get; set; }
+
+    /// <summary>Show the GHOSTCAM · name watermark.</summary>
+    public bool Watermark { get; set; }
+    public string WatermarkName { get; set; } = "KYROS";
+
+    /// <summary>Persisted custom overlays (text + image).</summary>
+    public List<OverlayState> Overlays { get; set; } = new();
 
     /// <summary>Face-detection confidence threshold (0.3 = sensitive, 0.9 = strict).</summary>
     public double ScoreThreshold { get; set; } = 0.6;
@@ -30,7 +52,7 @@ public sealed class OnyxSettings
         get
         {
             var dir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Onyx");
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "GhostCam");
             Directory.CreateDirectory(dir);
             return Path.Combine(dir, "settings.json");
         }
@@ -51,6 +73,20 @@ public sealed class OnyxSettings
             // Corrupt/unreadable settings fall back to defaults.
         }
         return new OnyxSettings();
+    }
+
+    public sealed class OverlayState
+    {
+        public int Kind { get; set; }
+        public string Text { get; set; } = string.Empty;
+        public string ImagePath { get; set; } = string.Empty;
+        public double Nx { get; set; } = 0.05;
+        public double Ny { get; set; } = 0.05;
+        public double Scale { get; set; } = 1.0;
+        public double Opacity { get; set; } = 1.0;
+        public int ColorB { get; set; } = 240;
+        public int ColorG { get; set; } = 240;
+        public int ColorR { get; set; } = 240;
     }
 
     public void Save()
