@@ -73,3 +73,6 @@ models/*.ort
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Nested standalone repo (github.com/RDXFGXY1/OnyxGhostCam) - not part of this repo
+/OnyxGhostCam/
