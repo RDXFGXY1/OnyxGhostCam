@@ -118,6 +118,24 @@ GOOD TO KNOW
     monitor handy when it really matters.
 
 
+CREDITS
+-------
+
+GhostCam -- by KYROS, Null Studio.
+
+I built the app: the idea, the architecture and what it
+actually does.
+
+The UI/UX was built with Claude Code (Anthropic's AI coding
+tool) -- the cockpit panel, the tactical HUD, the overlay editor
+and the visual design. Design isn't my strength, so I handed
+that part to AI and directed it. Being upfront rather than
+letting you assume I designed it myself.
+
+Built on OpenCV, ONNX Runtime, the UltraFace detection model,
+and OBS Studio's virtual camera.
+
+
 ================================================================
    Fully offline - Zero telemetry - Zero data stored
 

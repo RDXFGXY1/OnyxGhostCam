@@ -125,6 +125,26 @@ glance.
 
 ---
 
+## Credits
+
+**GhostCam** — by **KYROS** · **Null Studio**.
+
+I built the app: the idea, the architecture, how the pieces fit together and what
+it actually does.
+
+**The UI/UX was built with [Claude Code](https://claude.com/claude-code)**
+(Anthropic's AI coding tool) — the cockpit control panel, the tactical HUD, the
+overlay editor and the whole visual design. Design is genuinely not my strength,
+so I handed that part to AI and directed it. Worth being upfront about rather
+than letting you assume I designed it myself.
+
+**Also built on** — [OpenCV](https://opencv.org) for image processing,
+[ONNX Runtime](https://onnxruntime.ai) for face detection, the
+[UltraFace](https://github.com/onnx/models) model, and
+[OBS Studio](https://obsproject.com)'s virtual camera for output.
+
+---
+
 <div align="center">
 
 **GhostCam** · Fully offline · Zero telemetry · Zero data stored
