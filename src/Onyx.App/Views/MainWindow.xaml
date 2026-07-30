@@ -341,11 +341,22 @@
                             <ToggleButton x:Name="BootSwitch" Style="{StaticResource CockpitSwitch}"
                                           HorizontalAlignment="Right" />
                         </Grid>
-                        <Grid>
+                        <Grid Margin="0,0,0,10">
                             <TextBlock Text="COCKPIT AUDIO" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
                             <ToggleButton x:Name="SoundSwitch" Style="{StaticResource CockpitSwitch}"
                                           HorizontalAlignment="Right" Checked="OnSoundSw" Unchecked="OnSoundSw" />
                         </Grid>
+
+                        <Border Height="2" Background="{StaticResource AccentRedDim}" Margin="0,6,0,12" />
+
+                        <Grid Margin="0,0,0,4">
+                            <TextBlock Text="CHECK FOR UPDATES" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
+                            <ToggleButton x:Name="UpdateSwitch" Style="{StaticResource CockpitSwitch}"
+                                          HorizontalAlignment="Right" Checked="OnUpdateSw" Unchecked="OnUpdateSw" />
+                        </Grid>
+                        <TextBlock Text="The only network call GhostCam makes. Nothing about you is sent."
+                                   Style="{StaticResource HudLabel}" TextWrapping="Wrap" Margin="0,0,0,10" />
+                        <Button x:Name="CheckUpdateButton" Content="CHECK NOW" Height="32" Click="OnCheckUpdateNow" />
                     </StackPanel>
                 </Border>
 

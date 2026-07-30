@@ -32,9 +32,13 @@
   PRIVACY
 ----------------------------------------------------------------
 
-  Fully offline. Zero telemetry. Zero network calls. All face
-  detection runs locally on your own machine, and no frames are
-  ever stored or transmitted by GhostCam.
+  Zero telemetry. All face detection runs locally on your own
+  machine, and no frames are ever stored or transmitted by
+  GhostCam -- your video never leaves your computer.
+
+  The one network call GhostCam makes is to GitHub, to check
+  whether a newer version exists. It sends nothing about you,
+  and you can switch it off in CONFIG.
 
 ----------------------------------------------------------------
   REQUIREMENTS

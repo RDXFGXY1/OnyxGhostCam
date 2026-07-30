@@ -14,6 +14,10 @@ public sealed class TrayIcon : IDisposable
 
     public event Action? RestoreRequested;
     public event Action? ExitRequested;
+    /// <summary>Raised when the user clicks an update notification balloon.</summary>
+    public event Action? UpdateRequested;
+
+    private bool _balloonIsUpdate;
 
     public TrayIcon()
     {
@@ -32,20 +36,51 @@ public sealed class TrayIcon : IDisposable
             ContextMenuStrip = menu,
         };
         _icon.DoubleClick += (_, _) => RestoreRequested?.Invoke();
+        _icon.BalloonTipClicked += (_, _) =>
+        {
+            if (_balloonIsUpdate) { UpdateRequested?.Invoke(); }
+            else { RestoreRequested?.Invoke(); }
+        };
     }
+
+    /// <summary>
+    /// Windows notification telling the user an update is ready. Clicking it opens
+    /// the update window ("Update now").
+    /// </summary>
+    public void NotifyUpdate(string version)
+    {
+        bool wasHidden = !_icon.Visible;
+        _icon.Visible = true;
+        _balloonIsUpdate = true;
+        _icon.BalloonTipTitle = $"GhostCam {version} is available";
+        _icon.BalloonTipText = "Click here to update now.";
+        _icon.BalloonTipIcon = WinForms.ToolTipIcon.Info;
+        _icon.ShowBalloonTip(10000);
+        if (wasHidden)
+        {
+            // Keep the icon around briefly so the toast stays clickable.
+            var t = new WinForms.Timer { Interval = 12000 };
+            t.Tick += (_, _) => { t.Stop(); t.Dispose(); if (!_keepVisible) { _icon.Visible = false; } };
+            t.Start();
+        }
+    }
+
+    private bool _keepVisible;
 
     public void Show(string? balloon = null)
     {
         _icon.Visible = true;
+        _keepVisible = true;
         if (balloon is not null)
         {
+            _balloonIsUpdate = false;
             _icon.BalloonTipTitle = "GhostCam";
             _icon.BalloonTipText = balloon;
             _icon.ShowBalloonTip(1500);
         }
     }
 
-    public void Hide() => _icon.Visible = false;
+    public void Hide() { _keepVisible = false; _icon.Visible = false; }
 
     /// <summary>Prefers the real app icon extracted from the running executable.</summary>
     private static Icon? LoadAppIcon()

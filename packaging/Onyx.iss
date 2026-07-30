@@ -7,10 +7,10 @@
 #define AppName        "GhostCam"
 #define AppShortName   "GhostCam"
 #define AppVersion     "1.0.0"
-#define AppPublisher   "Null Studio"
+#define AppPublisher   "NullStudio"
 #define AppAuthor      "KYROS"
 #define AppExe         "GhostCam.exe"
-#define AppURL         "https://github.com/RDXFGXY1/Onyx"
+#define AppURL         "https://github.com/RDXFGXY1/OnyxGhostCam"
 
 [Setup]
 AppId={{9F2C4E77-3A21-4C58-B0D6-7E1A9C4F5B33}
@@ -58,7 +58,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon";   Description: "Create a &desktop shortcut";               GroupDescription: "Shortcuts:"; Flags: checkedonce
 Name: "startmenuicon"; Description: "Add to the &Start menu";                   GroupDescription: "Shortcuts:"; Flags: checkedonce
 Name: "quicklaunch";   Description: "Pin to the &taskbar area (quick launch)";  GroupDescription: "Shortcuts:"; Flags: unchecked
-Name: "startup";       Description: "Start Onyx when &Windows starts (hidden in tray)"; GroupDescription: "Startup:"; Flags: unchecked
+Name: "startup";       Description: "Start GhostCam when &Windows starts (hidden in tray)"; GroupDescription: "Startup:"; Flags: unchecked
 
 [Files]
 ; Published self-contained build (see make-installer.ps1)
@@ -90,7 +90,7 @@ Type: filesandordirs; Name: "{app}"
 [Messages]
 BeveledLabel=Null Studio · KYROS
 WelcomeLabel1=Welcome to [name]
-WelcomeLabel2=This will install [name/ver] on your computer.%n%nGhostCam is a fully offline privacy camera: it detects your face and covers it in real time, then feeds the result to any app as a virtual camera. No telemetry, no cloud.%n%nCreated by KYROS · Null Studio.%n%nIt is recommended that you close all other applications before continuing.
+WelcomeLabel2=This will install [name/ver] on your computer.%n%nGhostCam is a local privacy camera: it detects your face and covers it in real time, then feeds the result to any app as a virtual camera. Your video never leaves your computer and no telemetry is collected. GhostCam contacts GitHub only to check for updates, which you can switch off.%n%nCreated by KYROS · Null Studio.%n%nIt is recommended that you close all other applications before continuing.
 FinishedHeadingLabel=GhostCam is installed
 FinishedLabelNoIcons=[name] has been installed on your computer.%n%nNote: to broadcast into other apps, OBS Studio must be installed (GhostCam uses its virtual-camera driver; OBS does not need to be running).
 FinishedLabel=[name] has been installed on your computer.%n%nNote: to broadcast into other apps, OBS Studio must be installed (GhostCam uses its virtual-camera driver; OBS does not need to be running).

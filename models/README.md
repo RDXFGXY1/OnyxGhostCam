@@ -10,4 +10,5 @@ Planned models (final choice is an open decision):
 | `blazeface.onnx` | BlazeFace | Fast path — very low latency, single/near faces |
 | `<accurate>.onnx` | TBD | Accurate path — more robust, higher cost |
 
-All inference runs **fully offline** via ONNX Runtime + DirectML. No network calls, ever.
+All inference runs **locally** via ONNX Runtime + DirectML — no frame ever leaves
+the machine. (The app's only network call is the optional update check.)

@@ -1,0 +1,73 @@
+<Window x:Class="Onyx.App.Views.UpdateWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="GHOSTCAM // UPDATE"
+        Height="520" Width="460"
+        Background="{StaticResource BgBlack}"
+        WindowStyle="None" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+    <Border BorderBrush="{StaticResource AccentRed}" BorderThickness="2">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- title bar -->
+            <Border Grid.Row="0" Background="{StaticResource Panel}" Height="30"
+                    MouseLeftButtonDown="OnDrag">
+                <Grid>
+                    <TextBlock Text="GHOSTCAM // UPDATE" FontFamily="{StaticResource BodyFont}" FontSize="12"
+                               Foreground="{StaticResource Text}" VerticalAlignment="Center" Margin="10,0,0,0" />
+                    <Button Content="✕" Style="{StaticResource CaptionButton}" Height="28"
+                            HorizontalAlignment="Right" Click="OnLater" />
+                </Grid>
+            </Border>
+
+            <!-- header -->
+            <StackPanel Grid.Row="1" Margin="20,18,20,10">
+                <TextBlock Text="UPDATE AVAILABLE" FontFamily="{StaticResource HeaderFont}" FontSize="26"
+                           Foreground="{StaticResource AccentRed}" />
+                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                    <TextBlock x:Name="VersionText" Text="v1.0.1" Style="{StaticResource HudValue}" FontSize="15" />
+                    <TextBlock x:Name="CurrentText" Text="  (you have v1.0.0)" Style="{StaticResource HudLabel}"
+                               VerticalAlignment="Center" Margin="6,0,0,0" />
+                </StackPanel>
+                <TextBlock x:Name="MetaText" Style="{StaticResource HudLabel}" Margin="0,4,0,0" />
+            </StackPanel>
+
+            <!-- changelog -->
+            <Border Grid.Row="2" BorderBrush="{StaticResource AccentRedDim}" BorderThickness="2"
+                    Margin="20,0,20,14">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="14,12">
+                    <StackPanel x:Name="NotesPanel" />
+                </ScrollViewer>
+            </Border>
+
+            <!-- actions -->
+            <StackPanel Grid.Row="3" Margin="20,0,20,18">
+                <Border x:Name="ProgressTrack" Height="8" Background="{StaticResource Panel}"
+                        BorderBrush="{StaticResource AccentRedDim}" BorderThickness="1"
+                        Visibility="Collapsed" Margin="0,0,0,10">
+                    <Rectangle x:Name="ProgressFill" Fill="{StaticResource AccentRed}"
+                               HorizontalAlignment="Left" Width="0" />
+                </Border>
+                <TextBlock x:Name="StatusText" Style="{StaticResource HudLabel}" Margin="0,0,0,10" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="LaterButton" Grid.Column="0" Content="LATER" Height="42" Click="OnLater" />
+                    <Button x:Name="UpdateButton" Grid.Column="2" Content="UPDATE NOW" Height="42" Click="OnUpdate" />
+                </Grid>
+                <TextBlock Text="GhostCam only contacts GitHub to check for updates. Nothing about you is sent."
+                           Style="{StaticResource HudLabel}" TextWrapping="Wrap" Margin="0,12,0,0" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

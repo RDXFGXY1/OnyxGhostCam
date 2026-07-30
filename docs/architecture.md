@@ -41,5 +41,8 @@ media source. Chosen for low latency at 60 FPS with zero copies where possible.
 
 ## Privacy invariants
 
-- No network calls anywhere. No telemetry. No persistence of frames.
+- No telemetry. No persistence of frames. Frames never leave the machine.
+- The only network call is the optional update check (`Onyx.Core/Update`), which
+  fetches `update.json` from GitHub and sends nothing about the user. It is
+  switchable off in CONFIG.
 - All models bundled locally; inference is 100% on-device.

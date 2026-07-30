@@ -37,9 +37,9 @@ GhostCam finds your face automatically and follows it as you
 move. Whatever your webcam sees, the other side only ever gets
 the protected version.
 
-Everything happens on your own computer. GhostCam never connects
-to the internet, never uploads anything, and never saves a single
-frame.
+Your video never leaves your computer. GhostCam never uploads
+video and never saves a single frame. It contacts GitHub only to
+check for updates -- switchable off in CONFIG.
 
 
 GETTING STARTED
@@ -137,7 +137,7 @@ and OBS Studio's virtual camera.
 
 
 ================================================================
-   Fully offline - Zero telemetry - Zero data stored
+   Video never leaves your PC - Zero telemetry
 
    Made by KYROS
    Null Studio

@@ -4,7 +4,7 @@ namespace Onyx.Core.Settings;
 
 /// <summary>
 /// User-configurable settings, persisted to %AppData%\Onyx\settings.json.
-/// Everything stays local — no telemetry, no cloud.
+/// Stored locally only — no telemetry, nothing uploaded.
 /// </summary>
 public sealed class OnyxSettings
 {
@@ -36,6 +36,15 @@ public sealed class OnyxSettings
 
     /// <summary>Mirror only the drawn elements (text/overlays/HUD), leaving the video as-is.</summary>
     public bool MirrorText { get; set; }
+
+    /// <summary>
+    /// Check GitHub for new releases. This is the only network call GhostCam makes;
+    /// turn it off to keep the app completely offline.
+    /// </summary>
+    public bool CheckForUpdates { get; set; } = true;
+
+    /// <summary>Release version the user chose to skip reminders for.</summary>
+    public string SkippedVersion { get; set; } = string.Empty;
 
     /// <summary>Show the GHOSTCAM · name watermark.</summary>
     public bool Watermark { get; set; }

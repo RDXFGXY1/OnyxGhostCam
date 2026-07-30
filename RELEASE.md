@@ -34,7 +34,8 @@ black box, a little ghost, or a **CENSORED** bar.
 
 You get to show up. You just don't have to show your face.
 
-**Everything runs on your own machine.** No internet, no uploads, nothing saved.
+**Your video never leaves your machine.** No uploads, nothing saved. GhostCam
+contacts GitHub only to check for updates — switchable off in CONFIG.
 
 ---
 
@@ -142,7 +143,7 @@ genuinely like to hear what breaks and what you'd want next.
 
 <div align="center">
 
-**GhostCam v1.0.0** · Fully offline · Zero telemetry · Zero data stored
+**GhostCam v1.0.0** · Video never leaves your PC · Zero telemetry · Zero data stored
 
 Made by **KYROS**
 <br>

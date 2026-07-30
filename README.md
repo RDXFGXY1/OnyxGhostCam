@@ -41,9 +41,9 @@ You get to show up. You just don't have to show your face.
 GhostCam finds your face automatically and follows it as you move. Whatever your
 webcam sees, the other side only ever gets the protected version.
 
-**Everything happens on your own computer.** GhostCam never connects to the
-internet, never uploads anything, and never saves a single frame. Your camera
-never leaves your machine.
+**Your video never leaves your computer.** GhostCam never uploads video and
+never saves a single frame. The only thing it ever contacts is GitHub, to check
+for a new version — you can switch that off in CONFIG.
 
 ---
 
@@ -147,7 +147,7 @@ than letting you assume I designed it myself.
 
 <div align="center">
 
-**GhostCam** · Fully offline · Zero telemetry · Zero data stored
+**GhostCam** · Video never leaves your PC · Zero telemetry · Zero data stored
 
 Made by **KYROS**
 <br>

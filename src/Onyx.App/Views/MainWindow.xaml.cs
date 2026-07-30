@@ -15,6 +15,7 @@ using Onyx.Core.Detection;
 using Onyx.Core.Interop;
 using Onyx.Core.Processing;
 using Onyx.Core.Settings;
+using Onyx.Core.Update;
 using Mat = OpenCvSharp.Mat;
 using Rect = OpenCvSharp.Rect;
 using Size = OpenCvSharp.Size;
@@ -74,6 +75,13 @@ public partial class MainWindow : Window
     private bool _arming;
     private readonly TrayIcon _tray = new();
 
+    private static readonly string AppVersion =
+        System.Reflection.Assembly.GetExecutingAssembly().GetName().Version is { } v
+            ? $"{v.Major}.{v.Minor}.{v.Build}" : "1.0.0";
+    private UpdateInfo? _pendingUpdate;
+    private DispatcherTimer? _updateNagTimer;
+    private readonly Random _rng = new();
+
     public MainWindow()
     {
         InitializeComponent();
@@ -93,6 +101,10 @@ public partial class MainWindow : Window
 
         _tray.RestoreRequested += RestoreFromTray;
         _tray.ExitRequested += Close;
+        _tray.UpdateRequested += () => Dispatcher.BeginInvoke(ShowUpdateWindow);
+
+        // Runs in the background; must not hold up the window opening.
+        if (_settings.CheckForUpdates) { RunUpdateCheckInBackground(); }
 
         Closed += (_, _) =>
         {
@@ -139,6 +151,64 @@ public partial class MainWindow : Window
         Activate();
     }
 
+    // ===== updates =====
+
+    private async void RunUpdateCheckInBackground()
+    {
+        try { await CheckForUpdatesAsync(); }
+        catch { /* never let an update check break startup */ }
+    }
+
+    // Checks GitHub once at launch. If a newer release exists, show the window
+    // right away, then keep reminding with a Windows notification every 20-60 min.
+    private async Task CheckForUpdatesAsync()
+    {
+        var info = await new UpdateChecker().CheckAsync(AppVersion);
+        if (info is null) { return; }
+
+        _pendingUpdate = info;
+        _ = Dispatcher.BeginInvoke(() =>
+        {
+            SetStatus($"update available: v{info.Version.TrimStart('v', 'V')}");
+            if (!string.Equals(_settings.SkippedVersion, info.Version, StringComparison.OrdinalIgnoreCase))
+            {
+                ShowUpdateWindow();
+            }
+            StartUpdateNag();
+        });
+    }
+
+    private void StartUpdateNag()
+    {
+        _updateNagTimer?.Stop();
+        _updateNagTimer = new DispatcherTimer { Interval = NextNagDelay() };
+        _updateNagTimer.Tick += (_, _) =>
+        {
+            if (_pendingUpdate is null) { _updateNagTimer?.Stop(); return; }
+            _tray.NotifyUpdate($"v{_pendingUpdate.Version.TrimStart('v', 'V')}");
+            // Re-roll the interval so the reminder isn't clockwork.
+            if (_updateNagTimer is not null) { _updateNagTimer.Interval = NextNagDelay(); }
+        };
+        _updateNagTimer.Start();
+    }
+
+    private TimeSpan NextNagDelay() => TimeSpan.FromMinutes(_rng.Next(20, 61));
+
+    private void ShowUpdateWindow()
+    {
+        if (_pendingUpdate is null) { return; }
+        if (!IsVisible) { RestoreFromTray(); }
+
+        var dlg = new UpdateWindow(_pendingUpdate, AppVersion) { Owner = this };
+        var result = dlg.ShowDialog();
+
+        // "Later" on a non-mandatory release: stop nagging for this version.
+        if (result != true && !_pendingUpdate.Mandatory)
+        {
+            _settings.SkippedVersion = _pendingUpdate.Version;
+        }
+    }
+
     // ===== brushes =====
     private Brush Red => (Brush)FindResource("AccentRed");
     private Brush Dim => (Brush)FindResource("TextDim");
@@ -163,6 +233,7 @@ public partial class MainWindow : Window
         GpuSwitch.IsChecked = _useGpu; ParanoidSwitch.IsChecked = _paranoid;
         BootSwitch.IsChecked = _settings.ShieldOnStart; HudSwitch.IsChecked = _hudEnabled;
         Sfx.Enabled = _settings.Sound; SoundSwitch.IsChecked = _settings.Sound;
+        UpdateSwitch.IsChecked = _settings.CheckForUpdates;
         (_hd ? Res1080 : Res720).IsChecked = true;
         CoverRadio(_mosaic.Style).IsChecked = true;
         FilterRadio(_outputEffect).IsChecked = true;
@@ -367,6 +438,34 @@ public partial class MainWindow : Window
     private void OnMirrorTextSw(object s, RoutedEventArgs e) { Sfx.Click(); _mirrorText = MirrorTextSwitch.IsChecked == true; }
     private void OnHudSw(object s, RoutedEventArgs e) { Sfx.Click(); _hudEnabled = HudSwitch.IsChecked == true; }
     private void OnSoundSw(object s, RoutedEventArgs e) { Sfx.Enabled = SoundSwitch.IsChecked == true; Sfx.Click(); }
+
+    private void OnUpdateSw(object s, RoutedEventArgs e)
+    {
+        Sfx.Click();
+        _settings.CheckForUpdates = UpdateSwitch.IsChecked == true;
+        if (!_settings.CheckForUpdates) { _updateNagTimer?.Stop(); }
+    }
+
+    private async void OnCheckUpdateNow(object s, RoutedEventArgs e)
+    {
+        Sfx.Beep();
+        CheckUpdateButton.IsEnabled = false;
+        SetStatus("checking for updates…");
+
+        _settings.SkippedVersion = string.Empty; // manual check ignores "later"
+        var info = await new UpdateChecker().CheckAsync(AppVersion);
+        if (info is null)
+        {
+            SetStatus($"you're up to date (v{AppVersion})");
+        }
+        else
+        {
+            _pendingUpdate = info;
+            ShowUpdateWindow();
+            StartUpdateNag();
+        }
+        CheckUpdateButton.IsEnabled = true;
+    }
 
     private void OnPopOutClick(object s, RoutedEventArgs e)
     {
