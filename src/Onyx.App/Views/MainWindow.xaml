@@ -174,7 +174,7 @@
                             <TextBlock x:Name="CLed2" Style="{StaticResource StepLed}" />
                             <TextBlock Text="2 · COVER MODE" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
                         </StackPanel>
-                        <UniformGrid Columns="4" Margin="0,0,0,10">
+                        <UniformGrid Columns="3" Margin="0,0,0,8">
                             <RadioButton x:Name="CoverMosaic" GroupName="COVER" Content="MOSAIC" Tag="0"
                                          Style="{StaticResource SelectorButton}" Checked="OnCoverSel" />
                             <RadioButton x:Name="CoverBlack" GroupName="COVER" Content="BLACK" Tag="1"
@@ -183,7 +183,38 @@
                                          Style="{StaticResource SelectorButton}" Checked="OnCoverSel" />
                             <RadioButton x:Name="CoverCensor" GroupName="COVER" Content="CENSOR" Tag="3"
                                          Style="{StaticResource SelectorButton}" Checked="OnCoverSel" />
+                            <RadioButton x:Name="CoverImage" GroupName="COVER" Content="IMAGE" Tag="4"
+                                         Style="{StaticResource SelectorButton}" Checked="OnCoverSel" />
+                            <RadioButton x:Name="CoverTextMode" GroupName="COVER" Content="TEXT" Tag="5"
+                                         Style="{StaticResource SelectorButton}" Checked="OnCoverSel" />
                         </UniformGrid>
+
+                        <!-- IMAGE mode: user's own mask -->
+                        <Grid x:Name="MaskRow" Margin="0,0,0,10" Visibility="Collapsed">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="8" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" BorderBrush="{StaticResource AccentRedDim}" BorderThickness="2"
+                                    Padding="6,7">
+                                <TextBlock x:Name="MaskNameText" Text="no mask loaded"
+                                           Style="{StaticResource HudLabel}" TextTrimming="CharacterEllipsis" />
+                            </Border>
+                            <Button Grid.Column="2" Content="UPLOAD…" Width="90" Height="34" Click="OnUploadMask" />
+                        </Grid>
+
+                        <!-- TEXT mode: word stamped on the face -->
+                        <Grid x:Name="CoverTextRow" Margin="0,0,0,10" Visibility="Collapsed">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="TEXT" Style="{StaticResource HudLabel}"
+                                       VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <TextBox Grid.Column="1" x:Name="CoverTextBox" Text="NOPE"
+                                     TextChanged="OnCoverTextChanged" />
+                        </Grid>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                             <TextBlock x:Name="CLed3" Style="{StaticResource StepLed}" />
                             <TextBlock Text="3 · CALIBRATE" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />

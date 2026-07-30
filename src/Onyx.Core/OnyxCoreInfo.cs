@@ -4,5 +4,5 @@ namespace Onyx.Core;
 public static class OnyxCoreInfo
 {
     public const string Name = "Onyx.Core";
-    public const string Version = "1.0.0";
+    public const string Version = "1.1.0";
 }

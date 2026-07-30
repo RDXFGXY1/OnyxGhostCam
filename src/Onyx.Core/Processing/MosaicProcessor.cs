@@ -7,7 +7,7 @@ namespace Onyx.Core.Processing;
 /// nearest-neighbour interpolation. Works in place on OpenCV <see cref="Mat"/> frames.
 /// </summary>
 /// <summary>How a face region is covered. On-brand Ghost Cam options.</summary>
-public enum CoverStyle { Mosaic, Black, Ghost, Censored }
+public enum CoverStyle { Mosaic, Black, Ghost, Censored, Image, Text }
 
 public sealed class MosaicProcessor
 {
@@ -22,6 +22,31 @@ public sealed class MosaicProcessor
 
     /// <summary>How covered regions are rendered.</summary>
     public CoverStyle Style { get; set; } = CoverStyle.Mosaic;
+
+    /// <summary>User-supplied mask drawn over the face (CoverStyle.Image).</summary>
+    public Mat? CoverImage { get; private set; }
+    public string CoverImagePath { get; private set; } = string.Empty;
+
+    /// <summary>Word stamped over the face (CoverStyle.Text).</summary>
+    public string CoverText { get; set; } = "NOPE";
+
+    /// <summary>Loads a mask image (PNG transparency supported). Returns false if unreadable.</summary>
+    public bool LoadCoverImage(string path)
+    {
+        var img = Cv2.ImRead(path, ImreadModes.Unchanged);
+        if (img.Empty()) { img.Dispose(); return false; }
+        CoverImage?.Dispose();
+        CoverImage = img;
+        CoverImagePath = path;
+        return true;
+    }
+
+    public void ClearCoverImage()
+    {
+        CoverImage?.Dispose();
+        CoverImage = null;
+        CoverImagePath = string.Empty;
+    }
 
     /// <summary>Cover the entire frame in place.</summary>
     public void ApplyFullFrame(Mat frame)
@@ -51,8 +76,72 @@ public sealed class MosaicProcessor
             case CoverStyle.Black: r.SetTo(Scalar.Black); break;
             case CoverStyle.Ghost: DrawGhost(r); break;
             case CoverStyle.Censored: DrawCensored(r); break;
+            case CoverStyle.Image: DrawCoverImage(r); break;
+            case CoverStyle.Text: DrawCoverText(r); break;
             default: Pixelate(r); break;
         }
+    }
+
+    // User-uploaded mask, scaled to cover the face. Transparent PNGs blend over a
+    // pixelated backing so nothing shows through the see-through parts.
+    private void DrawCoverImage(Mat r)
+    {
+        if (CoverImage is null || CoverImage.Empty()) { Pixelate(r); return; }
+
+        Pixelate(r);   // privacy backing behind any transparency
+
+        // Stretch the mask to fill the whole covered region, so it occupies
+        // exactly the area that would otherwise be blurred.
+        using var resized = CoverImage.Resize(r.Size());
+        using var region = new Mat(r, new Rect(0, 0, r.Width, r.Height));
+
+        if (resized.Channels() == 4)
+        {
+            Cv2.Split(resized, out Mat[] ch);
+            try
+            {
+                using var fg = new Mat();
+                Cv2.Merge(new[] { ch[0], ch[1], ch[2] }, fg);
+                using var a3 = new Mat();
+                Cv2.CvtColor(ch[3], a3, ColorConversionCodes.GRAY2BGR);
+                using var aF = new Mat(); a3.ConvertTo(aF, MatType.CV_32FC3, 1.0 / 255);
+                using var inv = new Mat(); Cv2.Subtract(new Scalar(1, 1, 1), aF, inv);
+                using var fgF = new Mat(); fg.ConvertTo(fgF, MatType.CV_32FC3);
+                using var bgF = new Mat(); region.ConvertTo(bgF, MatType.CV_32FC3);
+                using var t1 = new Mat(); Cv2.Multiply(fgF, aF, t1);
+                using var t2 = new Mat(); Cv2.Multiply(bgF, inv, t2);
+                using var sum = new Mat(); Cv2.Add(t1, t2, sum);
+                sum.ConvertTo(region, MatType.CV_8UC3);
+            }
+            finally { foreach (var c in ch) { c.Dispose(); } }
+        }
+        else { resized.CopyTo(region); }
+    }
+
+    // Fills the face with a solid block and stamps the user's word across it.
+    private void DrawCoverText(Mat r)
+    {
+        r.SetTo(Scalar.Black);
+        var text = string.IsNullOrWhiteSpace(CoverText) ? "NOPE" : CoverText;
+        int w = r.Width, h = r.Height;
+
+        // Grow the font until the text spans ~90% of the face width.
+        double scale = 0.4;
+        int thick = 1;
+        for (double s = 0.4; s <= 12.0; s += 0.1)
+        {
+            int t = Math.Max(1, (int)(s * 1.6));
+            var sz = Cv2.GetTextSize(text, HersheyFonts.HersheyDuplex, s, t, out _);
+            if (sz.Width > w * 0.9 || sz.Height > h * 0.8) { break; }
+            scale = s; thick = t;
+        }
+
+        var size = Cv2.GetTextSize(text, HersheyFonts.HersheyDuplex, scale, thick, out int baseline);
+        var org = new Point((w - size.Width) / 2, (h + size.Height) / 2);
+        Cv2.PutText(r, text, org, HersheyFonts.HersheyDuplex, scale,
+            new Scalar(235, 235, 235), thick, LineTypes.AntiAlias);
+        Cv2.Rectangle(r, new Rect(0, 0, w - 1, h - 1), new Scalar(30, 30, 200),
+            Math.Max(2, w / 50));
     }
 
     // A little white ghost over a dark backing (the face is fully covered first).

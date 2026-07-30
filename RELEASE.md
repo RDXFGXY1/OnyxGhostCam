@@ -1,8 +1,8 @@
 <div align="center">
 
-# 👻 GhostCam v1.0.0
+# 👻 GhostCam v1.1.0
 
-**First release — keep your face private on camera.**
+**Hide behind your own image — or a word.**
 
 *by KYROS · Null Studio*
 
@@ -14,106 +14,94 @@
 
 | File | Size | What it is |
 |---|---|---|
-| **GhostCam-Setup-1.0.0.exe** | ~85 MB | Full installer — everything included |
+| **GhostCam-Setup-1.1.0.exe** | ~85 MB | Full installer — everything included |
 
-Download it, run it, follow the wizard. Nothing else to install.
+Already on v1.0.0? **You don't need this page** — open GhostCam and it'll offer the
+update itself.
 
-> Windows may show a *"Windows protected your PC"* warning because this release
-> isn't code-signed yet. Click **More info → Run anyway**.
-
----
-
-## What is GhostCam?
-
-GhostCam is a privacy shield for your webcam.
-
-It sits between your camera and every app you use — Discord, Zoom, Teams, your
-browser — and **covers your face in real time**. People on the call see you
-moving, talking and gesturing, but your face stays hidden behind a mosaic, a
-black box, a little ghost, or a **CENSORED** bar.
-
-You get to show up. You just don't have to show your face.
-
-**Your video never leaves your machine.** No uploads, nothing saved. GhostCam
-contacts GitHub only to check for updates — switchable off in CONFIG.
+> Windows may show a *"Windows protected your PC"* warning, and some antivirus
+> may flag it. GhostCam isn't code-signed yet (certificates are expensive), so
+> brand-new unknown installers get flagged by default. Click
+> **More info → Run anyway**. Source is right here if you'd rather build it yourself.
 
 ---
 
-## Quick start
+## ✨ What's new
 
-**1.** Install and open GhostCam.
+### 🖼️ Hide behind your own image
 
-**2.** Arm the three switches in order:
+Upload **any picture** and it covers your face — a mask, a sticker, a logo, your
+own artwork, a cursed meme. It follows your face as you move.
 
-| Step | Switch | What happens |
-|:---:|---|---|
-| **1** | **SENSOR** | Camera turns on — confirm you can see yourself |
-| **2** | **CLOAK** | Your face gets covered — pick a style, test, engage |
-| **3** | **UPLINK** | The protected picture goes out to your other apps |
+- Transparent PNGs work best
+- Fills the whole covered area
+- Transparent parts sit on a pixelated backing, so nothing leaks through
 
-Each step unlocks the next, so you can't go live before you're covered.
+**CLOAK → COVER MODE → IMAGE → UPLOAD…**
 
-**3.** In Discord (or any app), open camera settings and pick
-**"OBS Virtual Camera"**.
+### 🔤 Hide behind a word
 
-**4.** Press **POP-OUT MONITOR** — a small always-on-top window showing exactly
-what everyone else sees.
+Type anything — `NOPE`, `PRIVATE`, your handle — and it's stamped across your
+face. The font resizes itself so it always fits, whether you're close to the
+camera or far away.
+
+**CLOAK → COVER MODE → TEXT**
+
+### 🔄 Built-in updater
+
+GhostCam now tells you when there's a new version, shows exactly what changed,
+and installs it for you. No more checking GitHub.
+
+- A reminder arrives as a Windows notification if you dismiss it
+- Switch it off any time in **CONFIG → CHECK FOR UPDATES**
 
 ---
 
-## What's in this release
+## 🐛 Fixes
 
-**Privacy**
-- Real-time face detection that follows you as you move
-- Four cover styles: **mosaic**, **black**, **ghost**, **censored**
-- **Paranoid mode** — hides the whole picture if your face is ever lost (on by default)
-- **⚠ EXPOSED alarm** — flashes and warns if you're ever broadcasting uncovered
-- **MASTER KILL** — one button, everything off
+- Custom masks fill the entire covered region instead of leaving pixelated gaps
+  around the edges
+- Corrected the privacy wording — see below
 
-**Make it yours**
-- **Overlay editor** — add your own text and images, drag them anywhere, resize,
-  fade, recolour
-- **Watermark** — stamp `GHOSTCAM // your name` on the corner
-- **Filters** — retro scanlines or a glitch look
-- **Tactical HUD** — targeting reticle that locks onto your face
+## 📋 Changed
 
-**Built for actual use**
-- Cockpit-style controls with step-by-step arming and interlocks
-- Docked feed monitor + floating pop-out monitor
-- Runs on your dedicated GPU for speed
-- System-tray mode — tuck it away and it keeps working
-- Every setting is remembered between sessions
+GhostCam previously claimed *"zero network calls"*. With the updater that's no
+longer strictly true, so the wording is now accurate everywhere:
+
+> **Your video never leaves your PC. Zero telemetry. Nothing stored.**
+> The update check is the only network call GhostCam makes — it sends nothing
+> about you, and you can turn it off.
+
+The privacy of your camera hasn't changed at all. Only the honesty of the wording.
+
+---
+
+## Everything else (from v1.0.0)
+
+Real-time face cover (**mosaic · black · ghost · censored**), overlay editor for
+your own text and images, watermark, scanline and glitch filters, tactical HUD,
+paranoid mode, EXPOSED alarm, master kill, pop-out monitor, system tray, and the
+cockpit control panel.
+
+New here? The [README](README.md) walks through the whole thing.
 
 ---
 
 ## Requirements
 
 - **Windows 10 or 11** (64-bit)
-- A **webcam**
-- **[OBS Studio](https://obsproject.com)** installed — GhostCam borrows its
-  camera connection to reach your other apps. **You never have to open OBS**,
-  it just needs to be installed.
-
----
-
-## Good to know
-
-- **Dark room?** Cameras slow down in low light, and the picture will too. A lamp
-  facing you fixes it instantly.
-- **Your own preview may look mirrored** in Discord — that's Discord mirroring
-  your self-view, not GhostCam. Trust the pop-out monitor; that's the real
-  output. There are **MIRROR** switches in CONFIG if you want to flip it.
-- GhostCam is a privacy aid, not a guarantee. Keep the pop-out monitor open when
-  it really matters.
+- A **webcam** — or a phone-as-webcam app (DroidCam, Iriun, Camo…), just pick the
+  right **CAMERA INDEX**
+- **[OBS Studio](https://obsproject.com)** installed — GhostCam borrows its camera
+  connection to reach your other apps. **You never have to open OBS.**
 
 ---
 
 ## Known limitations
 
-- Requires OBS Studio installed for the virtual camera (a standalone driver needs
-  code-signing — planned for a future release)
-- Not code-signed yet, so Windows shows a SmartScreen warning on first run
-- Detects and covers faces; it doesn't yet recognise *whose* face it is
+- Requires OBS Studio installed for the virtual camera output
+- Not code-signed, so Windows SmartScreen and some antivirus will warn on first run
+- Covers any face it detects; it doesn't yet tell *whose* face is whose
 
 ---
 
@@ -134,16 +122,9 @@ the [UltraFace](https://github.com/onnx/models) model, and
 
 ---
 
-## Feedback
-
-Found a bug or have an idea? Open an issue — this is the first release and I'd
-genuinely like to hear what breaks and what you'd want next.
-
----
-
 <div align="center">
 
-**GhostCam v1.0.0** · Video never leaves your PC · Zero telemetry · Zero data stored
+**GhostCam v1.1.0** · Video never leaves your PC · Zero telemetry · Zero data stored
 
 Made by **KYROS**
 <br>

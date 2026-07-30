@@ -221,8 +221,13 @@ public partial class MainWindow : Window
         _camIndex = _settings.CameraIndex; _hd = _settings.Height >= 1080;
         _useGpu = _settings.UseGpu; _paranoid = _settings.ParanoidMode;
         _sensitivity = (int)Math.Round(_settings.ScoreThreshold * 100.0);
-        _mosaic.Style = (CoverStyle)Math.Clamp(_settings.CoverStyle, 0, 3);
+        _mosaic.Style = (CoverStyle)Math.Clamp(_settings.CoverStyle, 0, 5);
         _mosaic.BlockSize = _strength;
+        _mosaic.CoverText = string.IsNullOrWhiteSpace(_settings.CoverText) ? "NOPE" : _settings.CoverText;
+        if (!string.IsNullOrWhiteSpace(_settings.CoverImagePath) && File.Exists(_settings.CoverImagePath))
+        {
+            _mosaic.LoadCoverImage(_settings.CoverImagePath);
+        }
         _outputEffect = (OutputEffect)Math.Clamp(_settings.OutputEffect, 0, 2);
         _hudEnabled = _settings.Hud;
 
@@ -237,6 +242,10 @@ public partial class MainWindow : Window
         (_hd ? Res1080 : Res720).IsChecked = true;
         CoverRadio(_mosaic.Style).IsChecked = true;
         FilterRadio(_outputEffect).IsChecked = true;
+        CoverTextBox.Text = _mosaic.CoverText;
+        MaskNameText.Text = _mosaic.CoverImage is not null
+            ? Path.GetFileName(_mosaic.CoverImagePath) : "no mask loaded";
+        UpdateCoverRows();
 
         _watermark = _settings.Watermark;
         WatermarkSwitch.IsChecked = _watermark;
@@ -259,6 +268,7 @@ public partial class MainWindow : Window
         _settings.Height = _hd ? 1080 : 720; _settings.UseGpu = _useGpu;
         _settings.ShieldOnStart = BootSwitch.IsChecked == true; _settings.ParanoidMode = _paranoid;
         _settings.ScoreThreshold = _sensitivity / 100.0; _settings.CoverStyle = (int)_mosaic.Style;
+        _settings.CoverImagePath = _mosaic.CoverImagePath; _settings.CoverText = _mosaic.CoverText;
         _settings.OutputEffect = (int)_outputEffect; _settings.Hud = _hudEnabled;
         _settings.Sound = Sfx.Enabled;
         _settings.Watermark = _watermark; _settings.WatermarkName = _watermarkName;
@@ -276,7 +286,14 @@ public partial class MainWindow : Window
     }
 
     private RadioButton CoverRadio(CoverStyle s) => s switch
-    { CoverStyle.Black => CoverBlack, CoverStyle.Ghost => CoverGhost, CoverStyle.Censored => CoverCensor, _ => CoverMosaic };
+    {
+        CoverStyle.Black => CoverBlack,
+        CoverStyle.Ghost => CoverGhost,
+        CoverStyle.Censored => CoverCensor,
+        CoverStyle.Image => CoverImage,
+        CoverStyle.Text => CoverTextMode,
+        _ => CoverMosaic,
+    };
     private RadioButton FilterRadio(OutputEffect e) => e switch
     { OutputEffect.Scanlines => FilterScan, OutputEffect.Glitch => FilterGlitch, _ => FilterNone };
 
@@ -429,7 +446,47 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnCoverSel(object s, RoutedEventArgs e) { Sfx.Click(); _mosaic.Style = (CoverStyle)int.Parse((string)((RadioButton)s).Tag); }
+    private void OnCoverSel(object s, RoutedEventArgs e)
+    {
+        Sfx.Click();
+        _mosaic.Style = (CoverStyle)int.Parse((string)((RadioButton)s).Tag);
+        UpdateCoverRows();
+    }
+
+    // Show only the controls that belong to the selected cover mode.
+    private void UpdateCoverRows()
+    {
+        if (MaskRow is null || CoverTextRow is null) { return; }
+        MaskRow.Visibility = _mosaic.Style == CoverStyle.Image ? Visibility.Visible : Visibility.Collapsed;
+        CoverTextRow.Visibility = _mosaic.Style == CoverStyle.Text ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void OnUploadMask(object s, RoutedEventArgs e)
+    {
+        Sfx.Click();
+        var dlg = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Choose an image to cover your face",
+            Filter = "Images|*.png;*.jpg;*.jpeg;*.bmp|All files|*.*",
+        };
+        if (dlg.ShowDialog() != true) { return; }
+
+        if (_mosaic.LoadCoverImage(dlg.FileName))
+        {
+            MaskNameText.Text = Path.GetFileName(dlg.FileName);
+            SetStatus("mask loaded - transparent PNGs work best");
+        }
+        else
+        {
+            SetStatus("could not read that image");
+        }
+    }
+
+    private void OnCoverTextChanged(object s, TextChangedEventArgs e)
+    {
+        if (CoverTextBox is null) { return; }
+        _mosaic.CoverText = string.IsNullOrWhiteSpace(CoverTextBox.Text) ? "NOPE" : CoverTextBox.Text.Trim();
+    }
     private void OnFilterSel(object s, RoutedEventArgs e) { Sfx.Click(); _outputEffect = (OutputEffect)int.Parse((string)((RadioButton)s).Tag); }
     private void OnResSel(object s, RoutedEventArgs e) { Sfx.Click(); _hd = (string)((RadioButton)s).Tag == "1080"; }
     private void OnParanoidSw(object s, RoutedEventArgs e) { Sfx.Click(); _paranoid = ParanoidSwitch.IsChecked == true; }

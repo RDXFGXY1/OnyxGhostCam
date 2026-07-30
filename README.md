@@ -83,6 +83,8 @@ glance.
 | **Black** | A solid black box |
 | **Ghost** | A little cartoon ghost sits over your face |
 | **Censored** | Tabloid-style black bar |
+| **Image** | **Any picture you upload** — a mask, sticker, logo, your own art. It follows your face as you move (transparent PNGs work best) |
+| **Text** | **Hide behind a word** — type anything and it's stamped across your face, auto-sized to fit |
 
 **Make it yours**
 
@@ -102,6 +104,8 @@ glance.
 - **Master kill** — one button shuts everything down instantly.
 - **Tray mode** — tuck GhostCam into the system tray and it keeps working quietly
   in the background.
+- **Built-in updater** — GhostCam tells you when there's a new version, shows what
+  changed, and installs it for you. Switch it off in CONFIG if you'd rather not.
 
 ---
 

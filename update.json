@@ -1,18 +1,21 @@
 {
-  "version": "1.0.0",
-  "name": "GhostCam v1.0.0",
-  "published": "2026-07-29",
-  "url": "https://github.com/RDXFGXY1/OnyxGhostCam/releases/download/v1.0.0/GhostCam-Setup-1.0.0.exe",
+  "version": "1.1.0",
+  "name": "GhostCam v1.1.0",
+  "published": "2026-07-30",
+  "url": "https://github.com/RDXFGXY1/OnyxGhostCam/releases/download/v1.1.0/GhostCam-Setup-1.1.0.exe",
   "sizeMb": 85,
   "mandatory": false,
   "added": [
-    "First public release",
-    "Real-time face cover: mosaic, black, ghost, censored",
-    "Overlay editor with drag-to-place text and images",
-    "Watermark, scanline and glitch filters, tactical HUD",
-    "Cockpit controls with step-by-step arming and MASTER KILL",
-    "Pop-out monitor and system-tray mode"
+    "IMAGE cover: upload your own picture to hide your face — it tracks you as you move",
+    "TEXT cover: hide behind a word of your choice, auto-sized to your face",
+    "In-app updater: see what's new and install it without leaving GhostCam",
+    "Update reminders as Windows notifications, switchable off in CONFIG"
   ],
-  "fixed": [],
-  "changed": []
+  "fixed": [
+    "Custom masks now fill the whole covered area instead of leaving gaps",
+    "Transparent PNG masks sit on a pixelated backing so nothing shows through"
+  ],
+  "changed": [
+    "Privacy wording corrected: your video still never leaves your PC, and the update check is the only network call — it can be turned off"
+  ]
 }

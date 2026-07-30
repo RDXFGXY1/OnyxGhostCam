@@ -19,8 +19,14 @@ public sealed class OnyxSettings
     /// <summary>Blur the whole frame when no face is detected (fail-safe privacy).</summary>
     public bool ParanoidMode { get; set; } = true;
 
-    /// <summary>Cover style index: 0 Mosaic, 1 Black, 2 Ghost, 3 Censored.</summary>
+    /// <summary>Cover style index: 0 Mosaic, 1 Black, 2 Ghost, 3 Censored, 4 Image, 5 Text.</summary>
     public int CoverStyle { get; set; }
+
+    /// <summary>User-uploaded mask drawn over the face (CoverStyle.Image).</summary>
+    public string CoverImagePath { get; set; } = string.Empty;
+
+    /// <summary>Word stamped over the face (CoverStyle.Text).</summary>
+    public string CoverText { get; set; } = "NOPE";
 
     /// <summary>Output filter index: 0 None, 1 Scanlines, 2 Glitch.</summary>
     public int OutputEffect { get; set; }
