@@ -6,7 +6,7 @@
 
 #define AppName        "GhostCam"
 #define AppShortName   "GhostCam"
-#define AppVersion     "1.1.0"
+#define AppVersion     "1.2.0"
 #define AppPublisher   "NullStudio"
 #define AppAuthor      "KYROS"
 #define AppExe         "GhostCam.exe"
@@ -58,7 +58,11 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon";   Description: "Create a &desktop shortcut";               GroupDescription: "Shortcuts:"; Flags: checkedonce
 Name: "startmenuicon"; Description: "Add to the &Start menu";                   GroupDescription: "Shortcuts:"; Flags: checkedonce
 Name: "quicklaunch";   Description: "Pin to the &taskbar area (quick launch)";  GroupDescription: "Shortcuts:"; Flags: unchecked
-Name: "startup";       Description: "Start GhostCam when &Windows starts (hidden in tray)"; GroupDescription: "Startup:"; Flags: unchecked
+; NOTE: "start with Windows" is deliberately NOT offered here. It now lives on the
+; app's SETUP tab (see Onyx.Core\Settings\StartupRegistration.cs). An installer that
+; writes a Run key is establishing persistence at install time, which antivirus
+; heuristics score heavily against an unsigned binary; the same key written later by
+; a running app, at the user's request, is unremarkable.
 
 [Files]
 ; Published self-contained build (see make-installer.ps1)
@@ -76,8 +80,11 @@ Name: "{autodesktop}\{#AppName}";            Filename: "{app}\{#AppExe}"; IconFi
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#AppName}"; Filename: "{app}\{#AppExe}"; IconFilename: "{app}\onyx.ico"; Tasks: quicklaunch
 
 [Registry]
-Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; \
-    ValueName: "{#AppShortName}"; ValueData: """{app}\{#AppExe}"""; Flags: uninsdeletevalue; Tasks: startup
+; Creates nothing at install (ValueType none + dontcreatekey). This entry exists
+; only so the uninstaller clears the Run value if the user switched "start with
+; Windows" on inside the app — uninstalling never leaves a dangling auto-start.
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; \
+    ValueName: "{#AppShortName}"; ValueType: none; Flags: dontcreatekey uninsdeletevalue
 
 [Run]
 Filename: "{app}\README.txt"; Description: "Read the &guide (what it is and how to use it)"; \

@@ -34,6 +34,7 @@ public partial class MainWindow : Window
 
     private readonly WebcamCapture _capture = new();
     private readonly MosaicProcessor _mosaic = new();
+    private readonly BackgroundProcessor _background = new();
     private readonly object _frameLock = new();
     private Mat? _pendingProcessed;
     private WriteableBitmap? _procBitmap;
@@ -43,6 +44,7 @@ public partial class MainWindow : Window
     private FaceTracker? _tracker;
     private volatile bool _detectorInit;
     private volatile int _lastFaceCount;
+    private volatile bool _latched;
 
     private ObsVirtualCameraSink? _vcamSink;
     private readonly object _sinkLock = new();
@@ -55,7 +57,15 @@ public partial class MainWindow : Window
     private volatile int _currentFps;
 
     private int _strength = 16, _sensitivity = 60, _detRate = 3, _camIndex;
+    private int _latch = 15, _bgStrength = 12, _bgTight = 100, _watchdogMs = 1200;
     private bool _hd, _useGpu = true;
+
+    // Watchdog: the capture thread stamps this on every delivered frame; a timer
+    // thread blacks out the uplink if it goes stale.
+    private long _lastFrameTicks;
+    private volatile int _frameW = 1280, _frameH = 720;
+    private System.Threading.Timer? _watchdog;
+    private volatile bool _stalled;
 
     private readonly List<Overlay> _overlays = new();
     private readonly object _overlayLock = new();
@@ -96,8 +106,20 @@ public partial class MainWindow : Window
         _holdTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(30) };
         _holdTimer.Tick += OnHoldTick;
 
+        // Deliberately a plain threading timer, not a DispatcherTimer: it has to keep
+        // running even if the UI thread is busy or hung.
+        _watchdog = new System.Threading.Timer(OnWatchdogTick, null, 250, 250);
+
         ApplySettingsToUi();
         Refresh();
+
+        // Launched by the "start with Windows" Run entry: go straight to the tray
+        // instead of throwing a window up at every sign-in.
+        if (Environment.GetCommandLineArgs().Any(a =>
+                a.Equals("--tray", StringComparison.OrdinalIgnoreCase)))
+        {
+            Loaded += (_, _) => { _tray.Show("GhostCam is running — double-click to open."); Hide(); };
+        }
 
         _tray.RestoreRequested += RestoreFromTray;
         _tray.ExitRequested += Close;
@@ -110,7 +132,9 @@ public partial class MainWindow : Window
         {
             _tray.Dispose();
             SaveSettings(); _hudTimer.Stop(); _warnTimer.Stop(); _holdTimer.Stop();
-            _capture.Dispose(); _detector?.Dispose(); _popup?.Close(); _editor?.Close();
+            _watchdog?.Dispose(); _watchdog = null;
+            _capture.Dispose(); _detector?.Dispose(); _background.Dispose();
+            _popup?.Close(); _editor?.Close();
             lock (_sinkLock) { _vcamSink?.Dispose(); _vcamSink = null; }
             lock (_overlayLock) { foreach (var o in _overlays) { o.Dispose(); } _overlays.Clear(); }
         };
@@ -231,12 +255,38 @@ public partial class MainWindow : Window
         _outputEffect = (OutputEffect)Math.Clamp(_settings.OutputEffect, 0, 2);
         _hudEnabled = _settings.Hud;
 
+        _latch = Math.Clamp(_settings.LatchFrames, 0, 120);
+        _watchdogMs = _settings.WatchdogMs <= 0 ? 0 : Math.Clamp(_settings.WatchdogMs, 300, 5000);
+        _bgStrength = Math.Clamp(_settings.BackgroundStrength, 1, 30);
+        _bgTight = Math.Clamp(_settings.BackgroundTightness, 50, 160);
+        _background.Mode = (BackgroundMode)Math.Clamp(_settings.BackgroundMode, 0, 3);
+        _background.Strength = _bgStrength;
+        _background.Tightness = _bgTight;
+        if (!string.IsNullOrWhiteSpace(_settings.BackgroundImagePath) && File.Exists(_settings.BackgroundImagePath))
+        {
+            _background.LoadReplacement(_settings.BackgroundImagePath);
+        }
+        BgRadio(_background.Mode).IsChecked = true;
+        LatchVal.Text = _latch.ToString();
+        DogVal.Text = _watchdogMs == 0 ? "OFF" : _watchdogMs.ToString();
+        BgStrengthVal.Text = _bgStrength.ToString();
+        BgTightVal.Text = _bgTight.ToString();
+        BgNameText.Text = _background.ReplacementPath.Length > 0
+            ? Path.GetFileName(_background.ReplacementPath) : "no backdrop chosen";
+        UpdateBgRows();
+        RefreshProfileNames();
+
         StrengthVal.Text = _strength.ToString(); SensVal.Text = _sensitivity.ToString();
         RateVal.Text = _detRate.ToString(); CamVal.Text = _camIndex.ToString();
         _mirror = _settings.Mirror; MirrorSwitch.IsChecked = _mirror;
         _mirrorText = _settings.MirrorText; MirrorTextSwitch.IsChecked = _mirrorText;
         GpuSwitch.IsChecked = _useGpu; ParanoidSwitch.IsChecked = _paranoid;
         BootSwitch.IsChecked = _settings.ShieldOnStart; HudSwitch.IsChecked = _hudEnabled;
+        // Read the live registry state rather than a stored bool: the user may have
+        // cleared it from Task Manager's Startup tab behind our back.
+        _arming = true;
+        StartupSwitch.IsChecked = StartupRegistration.IsEnabled();
+        _arming = false;
         Sfx.Enabled = _settings.Sound; SoundSwitch.IsChecked = _settings.Sound;
         UpdateSwitch.IsChecked = _settings.CheckForUpdates;
         (_hd ? Res1080 : Res720).IsChecked = true;
@@ -271,6 +321,11 @@ public partial class MainWindow : Window
         _settings.CoverImagePath = _mosaic.CoverImagePath; _settings.CoverText = _mosaic.CoverText;
         _settings.OutputEffect = (int)_outputEffect; _settings.Hud = _hudEnabled;
         _settings.Sound = Sfx.Enabled;
+        _settings.LatchFrames = _latch; _settings.WatchdogMs = _watchdogMs;
+        _settings.BackgroundMode = (int)_background.Mode;
+        _settings.BackgroundStrength = _bgStrength;
+        _settings.BackgroundTightness = _bgTight;
+        _settings.BackgroundImagePath = _background.ReplacementPath;
         _settings.Watermark = _watermark; _settings.WatermarkName = _watermarkName;
         _settings.Mirror = _mirror; _settings.MirrorText = _mirrorText;
         lock (_overlayLock)
@@ -297,14 +352,45 @@ public partial class MainWindow : Window
     private RadioButton FilterRadio(OutputEffect e) => e switch
     { OutputEffect.Scanlines => FilterScan, OutputEffect.Glitch => FilterGlitch, _ => FilterNone };
 
-    // ===== panel expand/collapse =====
-    private static void Toggle(UIElement el)
-        => el.Visibility = el.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
-    private void OnToggleSensor(object s, RoutedEventArgs e) { Sfx.Click(); Toggle(SensorContent); }
-    private void OnToggleCloak(object s, RoutedEventArgs e) { Sfx.Click(); Toggle(CloakContent); }
-    private void OnToggleUplink(object s, RoutedEventArgs e) { Sfx.Click(); Toggle(UplinkContent); }
-    private void OnToggleConfig(object s, RoutedEventArgs e) { Sfx.Click(); Toggle(ConfigContent); }
-    private void OnToggleDiag(object s, RoutedEventArgs e) { Sfx.Click(); Toggle(DiagContent); }
+    // ===== control-rail tabs =====
+    // Only one page of the rail is visible at a time; the tab strip drives it.
+    private void OnTab(object sender, RoutedEventArgs e)
+    {
+        // Fires once during InitializeComponent, before the panels exist.
+        if (CloakContent is null) { return; }
+        Sfx.Click();
+
+        var tag = (sender as RadioButton)?.Tag as string ?? "cover";
+        Show(CloakContent, tag == "cover");
+        Show(OverlaysContent, tag == "overlay");
+        Show(UplinkContent, tag == "output");
+        Show(SensorContent, tag == "setup");
+    }
+
+    private static void Show(UIElement el, bool on)
+        => el.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+
+    // The big primary button: run the whole chain (sensor → cloak → uplink) or stop it.
+    private void OnGoLive(object sender, RoutedEventArgs e)
+    {
+        Sfx.Click();
+        if (_uplinkLive) { OnUplinkAbort(sender, e); return; }
+
+        if (_sensor != SensorSt.Online)
+        {
+            TabSetup.IsChecked = true;
+            SetStatus("start with SETUP — power the sensor, then ACQUIRE");
+            return;
+        }
+        if (_cloak != CloakSt.Engaged)
+        {
+            TabCover.IsChecked = true;
+            SetStatus("enable and engage the cloak before going live");
+            return;
+        }
+        TabOutput.IsChecked = true;
+        SetStatus("lift the arm guard, then hold BROADCAST");
+    }
 
     // ===== SENSOR procedure =====
     private void OnSensorPower(object s, RoutedEventArgs e)
@@ -333,7 +419,7 @@ public partial class MainWindow : Window
     {
         if (_sensor != SensorSt.Acquiring) { return; }
         Sfx.Arm(); _sensor = SensorSt.Online;
-        CloakContent.Visibility = Visibility.Visible; // auto-open next
+        TabCover.IsChecked = true; // walk them to the next step
         SetStatus("sensor online");
         Refresh();
     }
@@ -371,12 +457,16 @@ public partial class MainWindow : Window
     private void OnConfirmCloak(object s, RoutedEventArgs e)
     {
         if (_cloak != CloakSt.Tested) { return; }
-        Sfx.Arm(); _cloak = CloakSt.Engaged; UplinkContent.Visibility = Visibility.Visible; SetStatus("cloak engaged"); Refresh();
+        Sfx.Arm(); _cloak = CloakSt.Engaged; TabOutput.IsChecked = true; SetStatus("cloak engaged - finish on OUTPUT"); Refresh();
     }
 
     private void OnCloakAbort(object s, RoutedEventArgs e) { Sfx.Click(); CloakKill(); Refresh(); }
 
-    private void CloakKill() { _cloak = CloakSt.Safe; ForceOff(CloakEnableSw); UplinkKill(); }
+    private void CloakKill()
+    {
+        _cloak = CloakSt.Safe; ForceOff(CloakEnableSw); UplinkKill();
+        _tracker?.Reset(); _latched = false;
+    }
 
     // ===== UPLINK procedure =====
     private bool UplinkReady => _sensor == SensorSt.Online && _cloak == CloakSt.Engaged;
@@ -443,7 +533,184 @@ public partial class MainWindow : Window
             case "sens": _sensitivity = Math.Clamp(_sensitivity + (up ? 5 : -5), 30, 90); SensVal.Text = _sensitivity.ToString(); if (_detector is not null) { _detector.ScoreThreshold = _sensitivity / 100f; } break;
             case "rate": _detRate = Math.Clamp(_detRate + (up ? 1 : -1), 1, 8); RateVal.Text = _detRate.ToString(); if (_tracker is not null) { _tracker.DetectEveryNFrames = _detRate; } break;
             case "cam": _camIndex = Math.Clamp(_camIndex + (up ? 1 : -1), 0, 4); CamVal.Text = _camIndex.ToString(); break;
+            case "latch": _latch = Math.Clamp(_latch + (up ? 5 : -5), 0, 120); LatchVal.Text = _latch.ToString(); if (_tracker is not null) { _tracker.LatchFrames = _latch; } break;
+            case "bg": _bgStrength = Math.Clamp(_bgStrength + (up ? 2 : -2), 1, 30); BgStrengthVal.Text = _bgStrength.ToString(); _background.Strength = _bgStrength; break;
+            case "tight": _bgTight = Math.Clamp(_bgTight + (up ? 5 : -5), 50, 160); BgTightVal.Text = _bgTight.ToString(); _background.Tightness = _bgTight; break;
+            case "dog":
+                // Step down past the minimum to reach 0 = disabled.
+                _watchdogMs = up
+                    ? Math.Clamp(_watchdogMs == 0 ? 300 : _watchdogMs + 200, 300, 5000)
+                    : (_watchdogMs <= 300 ? 0 : _watchdogMs - 200);
+                DogVal.Text = _watchdogMs == 0 ? "OFF" : _watchdogMs.ToString();
+                break;
         }
+    }
+
+    // ===== background =====
+    private RadioButton BgRadio(BackgroundMode m) => m switch
+    {
+        BackgroundMode.Blur => BgBlur,
+        BackgroundMode.Image => BgImage,
+        BackgroundMode.Color => BgColor,
+        _ => BgOff,
+    };
+
+    private void OnBgSel(object s, RoutedEventArgs e)
+    {
+        Sfx.Click();
+        _background.Mode = (BackgroundMode)int.Parse((string)((RadioButton)s).Tag);
+        UpdateBgRows();
+        if (_background.Mode == BackgroundMode.Image && _background.ReplacementPath.Length == 0)
+        {
+            SetStatus("pick a backdrop image, or the background stays as-is");
+        }
+    }
+
+    private void UpdateBgRows()
+    {
+        if (BgStrengthRow is null) { return; }
+        var m = _background.Mode;
+        bool on = m != BackgroundMode.Off;
+        BgStrengthRow.Visibility = m == BackgroundMode.Blur ? Visibility.Visible : Visibility.Collapsed;
+        BgImageRow.Visibility = m == BackgroundMode.Image ? Visibility.Visible : Visibility.Collapsed;
+        BgTightRow.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+        BgHint.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void OnUploadBackdrop(object s, RoutedEventArgs e)
+    {
+        Sfx.Click();
+        var dlg = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Choose a background image",
+            Filter = "Images|*.png;*.jpg;*.jpeg;*.bmp|All files|*.*",
+        };
+        if (dlg.ShowDialog() != true) { return; }
+
+        if (_background.LoadReplacement(dlg.FileName))
+        {
+            BgNameText.Text = Path.GetFileName(dlg.FileName);
+            SetStatus("backdrop loaded");
+        }
+        else { SetStatus("could not read that image"); }
+    }
+
+    // ===== profiles =====
+    private void RefreshProfileNames()
+    {
+        var p = _settings.Profiles;
+        if (p.Count != 3) { return; }
+        Prof0Name.Text = p[0].Name; Prof1Name.Text = p[1].Name; Prof2Name.Text = p[2].Name;
+    }
+
+    private void OnProfileLoad(object s, RoutedEventArgs e)
+    {
+        int i = int.Parse((string)((Button)s).Tag);
+        if (i >= _settings.Profiles.Count) { return; }
+        Sfx.Arm();
+        ApplyProfile(_settings.Profiles[i]);
+        SetStatus($"loaded profile: {_settings.Profiles[i].Name}");
+    }
+
+    private void OnProfileSave(object s, RoutedEventArgs e)
+    {
+        int i = int.Parse((string)((Button)s).Tag);
+        if (i >= _settings.Profiles.Count) { return; }
+        Sfx.Beep();
+        var name = _settings.Profiles[i].Name;   // slot keeps its name
+        _settings.Profiles[i] = CaptureProfile(name);
+        _settings.Save();
+        SetStatus($"saved current settings to: {name}");
+    }
+
+    private void OnProfilesReset(object s, RoutedEventArgs e)
+    {
+        Sfx.Click();
+        _settings.Profiles = OnyxSettings.DefaultProfiles();
+        _settings.Save();
+        RefreshProfileNames();
+        SetStatus("profiles reset to defaults");
+    }
+
+    private OnyxSettings.Profile CaptureProfile(string name) => new()
+    {
+        Name = name,
+        CoverStyle = (int)_mosaic.Style,
+        MosaicBlockSize = _strength,
+        DetectEveryN = _detRate,
+        ScoreThreshold = _sensitivity / 100.0,
+        ParanoidMode = _paranoid,
+        LatchFrames = _latch,
+        BackgroundMode = (int)_background.Mode,
+        BackgroundStrength = _bgStrength,
+        BackgroundTightness = _bgTight,
+        BackgroundImagePath = _background.ReplacementPath,
+        OutputEffect = (int)_outputEffect,
+        Hud = _hudEnabled,
+        Watermark = _watermark,
+        CoverText = _mosaic.CoverText,
+        CoverImagePath = _mosaic.CoverImagePath,
+    };
+
+    // Pushes a saved profile into both the live pipeline and the controls. Never
+    // touches the sensor/cloak/uplink state machines — loading a profile must not
+    // be able to put you on air.
+    private void ApplyProfile(OnyxSettings.Profile p)
+    {
+        _strength = Math.Clamp(p.MosaicBlockSize, 4, 60);
+        _detRate = Math.Clamp(p.DetectEveryN, 1, 8);
+        _sensitivity = Math.Clamp((int)Math.Round(p.ScoreThreshold * 100), 30, 90);
+        _latch = Math.Clamp(p.LatchFrames, 0, 120);
+        _bgStrength = Math.Clamp(p.BackgroundStrength, 1, 30);
+        _bgTight = Math.Clamp(p.BackgroundTightness, 50, 160);
+        _paranoid = p.ParanoidMode;
+        _hudEnabled = p.Hud;
+        _watermark = p.Watermark;
+        _outputEffect = (OutputEffect)Math.Clamp(p.OutputEffect, 0, 2);
+
+        _mosaic.Style = (CoverStyle)Math.Clamp(p.CoverStyle, 0, 5);
+        _mosaic.BlockSize = _strength;
+        if (!string.IsNullOrWhiteSpace(p.CoverText)) { _mosaic.CoverText = p.CoverText; }
+        if (!string.IsNullOrWhiteSpace(p.CoverImagePath) && File.Exists(p.CoverImagePath))
+        {
+            _mosaic.LoadCoverImage(p.CoverImagePath);
+        }
+
+        _background.Mode = (BackgroundMode)Math.Clamp(p.BackgroundMode, 0, 3);
+        _background.Strength = _bgStrength;
+        _background.Tightness = _bgTight;
+        if (!string.IsNullOrWhiteSpace(p.BackgroundImagePath) && File.Exists(p.BackgroundImagePath))
+        {
+            _background.LoadReplacement(p.BackgroundImagePath);
+        }
+
+        if (_detector is not null) { _detector.ScoreThreshold = _sensitivity / 100f; }
+        if (_tracker is not null) { _tracker.DetectEveryNFrames = _detRate; _tracker.LatchFrames = _latch; }
+
+        // Mirror it all back into the controls.
+        _arming = true;
+        StrengthVal.Text = _strength.ToString();
+        SensVal.Text = _sensitivity.ToString();
+        RateVal.Text = _detRate.ToString();
+        LatchVal.Text = _latch.ToString();
+        BgStrengthVal.Text = _bgStrength.ToString();
+        BgTightVal.Text = _bgTight.ToString();
+        ParanoidSwitch.IsChecked = _paranoid;
+        HudSwitch.IsChecked = _hudEnabled;
+        WatermarkSwitch.IsChecked = _watermark;
+        CoverRadio(_mosaic.Style).IsChecked = true;
+        FilterRadio(_outputEffect).IsChecked = true;
+        BgRadio(_background.Mode).IsChecked = true;
+        CoverTextBox.Text = _mosaic.CoverText;
+        MaskNameText.Text = _mosaic.CoverImage is not null
+            ? Path.GetFileName(_mosaic.CoverImagePath) : "no mask loaded";
+        BgNameText.Text = _background.ReplacementPath.Length > 0
+            ? Path.GetFileName(_background.ReplacementPath) : "no backdrop chosen";
+        _arming = false;
+
+        UpdateCoverRows();
+        UpdateBgRows();
+        Refresh();
     }
 
     private void OnCoverSel(object s, RoutedEventArgs e)
@@ -496,6 +763,22 @@ public partial class MainWindow : Window
     private void OnHudSw(object s, RoutedEventArgs e) { Sfx.Click(); _hudEnabled = HudSwitch.IsChecked == true; }
     private void OnSoundSw(object s, RoutedEventArgs e) { Sfx.Enabled = SoundSwitch.IsChecked == true; Sfx.Click(); }
 
+    private void OnStartupSw(object s, RoutedEventArgs e)
+    {
+        if (_arming) { return; }
+        Sfx.Click();
+        bool want = StartupSwitch.IsChecked == true;
+        if (StartupRegistration.Set(want))
+        {
+            SetStatus(want ? "GhostCam will start with Windows (to tray)" : "GhostCam will no longer start with Windows");
+        }
+        else
+        {
+            _arming = true; StartupSwitch.IsChecked = !want; _arming = false;
+            SetStatus("could not change the startup setting");
+        }
+    }
+
     private void OnUpdateSw(object s, RoutedEventArgs e)
     {
         Sfx.Click();
@@ -532,8 +815,6 @@ public partial class MainWindow : Window
     }
 
     // ===== OVERLAYS =====
-    private void OnToggleOverlays(object s, RoutedEventArgs e) { Sfx.Click(); Toggle(OverlaysContent); }
-
     private void OnWatermarkSw(object s, RoutedEventArgs e) { Sfx.Click(); _watermark = WatermarkSwitch.IsChecked == true; }
 
     private void OnWatermarkName(object s, TextChangedEventArgs e)
@@ -600,6 +881,7 @@ public partial class MainWindow : Window
         Led(ULed4, _uplinkLive ? 2 : (_guardLifted ? 1 : 0));
 
         PreviewHint.Visibility = _capture.IsRunning ? Visibility.Collapsed : Visibility.Visible;
+        GoLiveText.Text = _uplinkLive ? "■ STOP BROADCAST" : "◤ GO LIVE";
         if (!_warnActive) { UpdateMaster(); }
     }
 
@@ -639,6 +921,41 @@ public partial class MainWindow : Window
         else if (_warnActive) { _warnActive = false; UpdateMaster(); }
     }
 
+    // ===== pipeline watchdog =====
+    // If the capture thread dies, blocks on a wedged driver, or the camera is yanked
+    // out mid-call, the OBS shared buffer would otherwise keep serving whatever
+    // frame was last written — a still image of you, uncovered if the cloak hadn't
+    // engaged yet. Fail closed: push black.
+    private void OnWatchdogTick(object? _)
+    {
+        int limit = _watchdogMs;
+        if (limit <= 0 || !_uplinkLive) { return; }
+
+        long since = Environment.TickCount64 - Interlocked.Read(ref _lastFrameTicks);
+        if (since < limit) { return; }
+
+        try
+        {
+            lock (_sinkLock)
+            {
+                if (_vcamSink is null) { return; }
+                using var black = new Mat(new Size(_frameW, _frameH), OpenCvSharp.MatType.CV_8UC3, OpenCvSharp.Scalar.Black);
+                OpenCvSharp.Cv2.PutText(black, "SIGNAL LOST", new OpenCvSharp.Point(40, _frameH / 2),
+                    OpenCvSharp.HersheyFonts.HersheyDuplex, 1.2, new OpenCvSharp.Scalar(40, 40, 200), 2,
+                    OpenCvSharp.LineTypes.AntiAlias);
+                _vcamSink.WriteFrame(black);
+            }
+        }
+        catch
+        {
+            // The watchdog must never be the thing that takes the app down.
+        }
+
+        if (_stalled) { return; }
+        _stalled = true;
+        Dispatcher.BeginInvoke(() => SetStatus($"⚠ FEED STALLED ({since} ms) - output blacked out"));
+    }
+
     // ===== detector =====
     private void EnsureDetector()
     {
@@ -652,7 +969,8 @@ public partial class MainWindow : Window
             try
             {
                 var d = new UltraFaceDetector(path, gpu) { ScoreThreshold = th };
-                _detector = d; _tracker = new FaceTracker(d) { DetectEveryNFrames = n };
+                _detector = d;
+                _tracker = new FaceTracker(d) { DetectEveryNFrames = n, LatchFrames = _latch };
                 Dispatcher.BeginInvoke(() => AccelText.Text = d.UsingGpu ? ShortGpu(d.GpuName) : "CPU");
             }
             catch (Exception ex) { Dispatcher.BeginInvoke(() => { SetStatus($"detector failed ({ex.Message})"); AccelText.Text = "N/A"; }); }
@@ -677,13 +995,17 @@ public partial class MainWindow : Window
         int frames = Interlocked.Exchange(ref _frameCount, 0);
         double secs = _fpsClock.Elapsed.TotalSeconds; _fpsClock.Restart();
         double fps = secs > 0 ? frames / secs : 0; _currentFps = (int)Math.Round(fps);
-        FpsText.Text = $"{fps:0} FPS  ·  {_lastFaceCount} FACE(S)";
+        FpsText.Text = _latched
+            ? $"{fps:0} FPS  ·  LATCHED"
+            : $"{fps:0} FPS  ·  {_lastFaceCount} FACE(S)";
     }
 
     private void OnFrameReady(Mat frame)
     {
         Interlocked.Increment(ref _frameCount);
         IReadOnlyList<Rect> hudFaces = System.Array.Empty<Rect>();
+
+        _frameW = frame.Width; _frameH = frame.Height;
 
         if (_mosaicEnabled)
         {
@@ -692,12 +1014,27 @@ public partial class MainWindow : Window
             {
                 var faces = tracker.Update(frame);
                 _lastFaceCount = faces.Count;
-                if (faces.Count > 0) { var p = PadFaces(faces, frame.Size()); _mosaic.ApplyRegions(frame, p); hudFaces = p; }
+                _latched = tracker.IsLatched;
+                var padded = faces.Count > 0 ? PadFaces(faces, frame.Size()) : faces;
+
+                // Background first: the cover is drawn on top so the face is never
+                // blended with whatever is behind it.
+                //
+                // Note this gets the RAW boxes, not the padded ones. Padding exists to
+                // make the *cover* generous; feeding it to the cutout as well stacks
+                // two expansions and drags a ring of wall into the sharp region.
+                _background.Apply(frame, faces);
+
+                if (padded.Count > 0) { _mosaic.ApplyRegions(frame, padded); hudFaces = padded; }
                 else if (_paranoid) { _mosaic.ApplyFullFrame(frame); }
             }
             else { _mosaic.ApplyFullFrame(frame); }
         }
-        else { _lastFaceCount = 0; }
+        else
+        {
+            _lastFaceCount = 0; _latched = false;
+            _background.Apply(frame, System.Array.Empty<Rect>());
+        }
 
         if (_outputEffect != OutputEffect.None) { FrameEffects.Apply(frame, _outputEffect); }
 
@@ -720,6 +1057,10 @@ public partial class MainWindow : Window
 
         lock (_sinkLock) { _vcamSink?.WriteFrame(frame); }
         lock (_frameLock) { _pendingProcessed?.Dispose(); _pendingProcessed = frame; }
+
+        // Stamped last, so it only counts once the frame has actually gone out.
+        Interlocked.Exchange(ref _lastFrameTicks, Environment.TickCount64);
+        _stalled = false;
     }
 
     // Draw every overlay element (HUD, custom overlays, watermark) onto a frame.

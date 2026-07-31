@@ -1,21 +1,24 @@
 {
-  "version": "1.1.0",
-  "name": "GhostCam v1.1.0",
-  "published": "2026-07-30",
-  "url": "https://github.com/RDXFGXY1/OnyxGhostCam/releases/download/v1.1.0/GhostCam-Setup-1.1.0.exe",
+  "version": "1.2.0",
+  "name": "GhostCam v1.2.0",
+  "published": "2026-07-31",
+  "url": "https://github.com/RDXFGXY1/OnyxGhostCam/releases/download/v1.2.0/GhostCam-Setup-1.2.0.exe",
   "sizeMb": 85,
   "mandatory": false,
   "added": [
-    "IMAGE cover: upload your own picture to hide your face — it tracks you as you move",
-    "TEXT cover: hide behind a word of your choice, auto-sized to your face",
-    "In-app updater: see what's new and install it without leaving GhostCam",
-    "Update reminders as Windows notifications, switchable off in CONFIG"
+    "Cover latch: keeps covering your face for a moment after the detector loses it, so a blink or a head turn can't expose you for a frame",
+    "Background blur and replace: hide your room, not just your face — blur it, swap in your own image, or black it out",
+    "Profiles: three one-click presets (WORK CALL, STREAM, FULL ANON) that load all your cloak settings at once",
+    "Pipeline watchdog: if the camera stalls or gets unplugged while you're live, the output goes black instead of freezing on your last frame",
+    "START WITH WINDOWS toggle — GhostCam can launch straight to the tray at sign-in",
+    "Portable ZIP download for anyone whose antivirus blocks the installer"
   ],
   "fixed": [
-    "Custom masks now fill the whole covered area instead of leaving gaps",
-    "Transparent PNG masks sit on a pixelated backing so nothing shows through"
+    "New layout built around a large live preview with a tabbed control rail, instead of stacked panels",
+    "Face tracking no longer jitters when the detector briefly misses you"
   ],
   "changed": [
-    "Privacy wording corrected: your video still never leaves your PC, and the update check is the only network call — it can be turned off"
+    "\"Start with Windows\" moved out of the installer into the app's SETUP tab — same feature, fewer antivirus false positives",
+    "Releases now ship SHA256 checksums so you can verify your download"
   ]
 }

@@ -2,19 +2,41 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- ===== Onyx brutalist HUD palette: dark red + black ===== -->
-    <Color x:Key="BgBlackColor">#FF0A0A0A</Color>
-    <Color x:Key="PanelColor">#FF141414</Color>
-    <Color x:Key="AccentRedColor">#FFC81E1E</Color>
-    <Color x:Key="AccentRedDimColor">#FF5A0C0C</Color>
-    <Color x:Key="TextColor">#FFD8D8D8</Color>
-    <Color x:Key="TextDimColor">#FF7A7A7A</Color>
+    <Color x:Key="BgBlackColor">#FF08090B</Color>
+    <Color x:Key="PanelColor">#FF101216</Color>
+    <Color x:Key="Surface2Color">#FF16181D</Color>
+    <Color x:Key="Surface3Color">#FF1D2026</Color>
+    <Color x:Key="LineColor">#FF22252B</Color>
+    <Color x:Key="LineStrongColor">#FF2E323A</Color>
+    <Color x:Key="AccentRedColor">#FFE10600</Color>
+    <Color x:Key="AccentRedDimColor">#FF3A0F10</Color>
+    <Color x:Key="TextColor">#FFE9EBEE</Color>
+    <Color x:Key="TextDimColor">#FF9AA0A8</Color>
+    <Color x:Key="TextMutedColor">#FF636A73</Color>
+    <Color x:Key="OkColor">#FF35C77E</Color>
 
     <SolidColorBrush x:Key="BgBlack" Color="{StaticResource BgBlackColor}" />
     <SolidColorBrush x:Key="Panel" Color="{StaticResource PanelColor}" />
+    <SolidColorBrush x:Key="Surface2" Color="{StaticResource Surface2Color}" />
+    <SolidColorBrush x:Key="Surface3" Color="{StaticResource Surface3Color}" />
+    <SolidColorBrush x:Key="Line" Color="{StaticResource LineColor}" />
+    <SolidColorBrush x:Key="LineStrong" Color="{StaticResource LineStrongColor}" />
     <SolidColorBrush x:Key="AccentRed" Color="{StaticResource AccentRedColor}" />
     <SolidColorBrush x:Key="AccentRedDim" Color="{StaticResource AccentRedDimColor}" />
     <SolidColorBrush x:Key="Text" Color="{StaticResource TextColor}" />
     <SolidColorBrush x:Key="TextDim" Color="{StaticResource TextDimColor}" />
+    <SolidColorBrush x:Key="TextMuted" Color="{StaticResource TextMutedColor}" />
+    <SolidColorBrush x:Key="Ok" Color="{StaticResource OkColor}" />
+
+    <LinearGradientBrush x:Key="CardFill" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FF14171B" Offset="0" />
+        <GradientStop Color="#FF101216" Offset="1" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="AccentFill" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FFF01A12" Offset="0" />
+        <GradientStop Color="#FFC00500" Offset="1" />
+    </LinearGradientBrush>
 
     <!-- Fonts: comma-separated fallbacks. Drop Bebas Neue / Space Mono .ttf into
          Assets/Fonts and change these two lines to use them (see Assets/Fonts/README). -->
@@ -34,6 +56,300 @@
     </DrawingBrush>
 
     <!-- ===== Label text styles ===== -->
+    <!-- ====== premium component set ====== -->
+
+    <FontFamily x:Key="UiFont">Segoe UI Variable Text, Segoe UI</FontFamily>
+    <FontFamily x:Key="MonoFont">Cascadia Mono, Consolas</FontFamily>
+    <SolidColorBrush x:Key="AccentSoft" Color="#FF8E1512" />
+    <FontFamily x:Key="UiDisplay">Segoe UI Variable Display, Segoe UI Semibold, Segoe UI</FontFamily>
+
+    <Style x:Key="RowTitle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{StaticResource Text}" />
+    </Style>
+
+    <Style x:Key="RowSub" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Foreground" Value="{StaticResource TextMuted}" />
+        <Setter Property="Margin" Value="0,2,0,0" />
+    </Style>
+
+    <!-- numbered step chip -->
+    <Style x:Key="StepBadge" TargetType="Border">
+        <Setter Property="Width" Value="30" />
+        <Setter Property="Height" Value="30" />
+        <Setter Property="CornerRadius" Value="7" />
+        <Setter Property="Background" Value="#1AE10600" />
+        <Setter Property="BorderBrush" Value="#4DE10600" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style x:Key="StepNumber" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{StaticResource AccentRed}" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- grouped inner panel -->
+    <Style x:Key="SubCard" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource CardFill}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="14,13" />
+        <Setter Property="Margin" Value="0,0,0,10" />
+    </Style>
+
+    <Style x:Key="IconChip" TargetType="Border">
+        <Setter Property="Width" Value="30" />
+        <Setter Property="Height" Value="30" />
+        <Setter Property="CornerRadius" Value="7" />
+        <Setter Property="Background" Value="#14E10600" />
+        <Setter Property="BorderBrush" Value="#33E10600" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- cover-mode card -->
+    <Style x:Key="ModeCard" TargetType="RadioButton">
+        <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Margin" Value="0,0,8,8" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="b" Background="{StaticResource Surface2}" BorderBrush="{StaticResource Line}"
+                            BorderThickness="1" CornerRadius="8" Padding="10,12">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="b" Property="Background" Value="#1FE10600" />
+                            <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource AccentRed}" />
+                            <Setter Property="Foreground" Value="#FFFF6B62" />
+                            <Setter TargetName="b" Property="Effect">
+                                <Setter.Value>
+                                    <DropShadowEffect Color="{StaticResource AccentRedColor}" BlurRadius="12"
+                                                      ShadowDepth="0" Opacity="0.30" />
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="b" Property="Background" Value="{StaticResource Surface3}" />
+                            <Setter Property="Foreground" Value="{StaticResource Text}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.32" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- primary action -->
+    <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="b" Background="{StaticResource AccentFill}" BorderBrush="#FFFF2A20"
+                            BorderThickness="1" CornerRadius="7">
+                        <Border.Effect>
+                            <DropShadowEffect Color="{StaticResource AccentRedColor}" BlurRadius="18"
+                                              ShadowDepth="0" Opacity="0.30" />
+                        </Border.Effect>
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="b" Property="Background" Value="#FFFF1A11" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="b" Property="Background" Value="#FFA80400" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="b" Property="Background" Value="#FF221619" />
+                            <Setter TargetName="b" Property="BorderBrush" Value="#FF2A1B1D" />
+                            <Setter TargetName="b" Property="Effect" Value="{x:Null}" />
+                            <Setter Property="Foreground" Value="{StaticResource TextMuted}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- secondary / destructive -->
+    <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Foreground" Value="#FFD98D8A" />
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="b" Background="{StaticResource Surface2}" BorderBrush="#FF43262A"
+                            BorderThickness="1" CornerRadius="7">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="b" Property="Background" Value="#1FE10600" />
+                            <Setter TargetName="b" Property="BorderBrush" Value="#FF8E1512" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="b" Property="Background" Value="#FF0E1013" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="b" Property="Background" Value="#FF0E1013" />
+                            <Setter TargetName="b" Property="BorderBrush" Value="#FF1C1F24" />
+                            <Setter Property="Foreground" Value="{StaticResource TextMuted}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- accent outline (TEST CLOAK) -->
+    <Style x:Key="AccentOutlineButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Foreground" Value="#FFFF6B62" />
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="b" Background="#14E10600" BorderBrush="#59E10600"
+                            BorderThickness="1" CornerRadius="7">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="b" Property="Background" Value="#2BE10600" />
+                            <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource AccentRed}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="b" Property="Background" Value="Transparent" />
+                            <Setter TargetName="b" Property="BorderBrush" Value="#FF1C1F24" />
+                            <Setter Property="Foreground" Value="{StaticResource TextMuted}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- stepper glyph button -->
+    <Style x:Key="StepperButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Width" Value="30" />
+        <Setter Property="Height" Value="32" />
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="b" Background="{StaticResource Surface2}" BorderBrush="{StaticResource Line}"
+                            BorderThickness="1" CornerRadius="6">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="b" Property="Background" Value="{StaticResource Surface3}" />
+                            <Setter Property="Foreground" Value="{StaticResource Text}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="b" Property="Background" Value="#26E10600" />
+                            <Setter Property="Foreground" Value="{StaticResource AccentRed}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="#FF33383F" />
+                            <Setter TargetName="b" Property="Background" Value="#FF0E1013" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ValueBox" TargetType="Border">
+        <Setter Property="Width" Value="54" />
+        <Setter Property="Height" Value="32" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Background" Value="#FF0C0E11" />
+        <Setter Property="BorderBrush" Value="#40E10600" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Margin" Value="5,0" />
+    </Style>
+
+    <Style x:Key="ValueText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{StaticResource AccentRed}" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- calibration slider -->
+    <Style x:Key="CalSlider" TargetType="Slider">
+        <Setter Property="Height" Value="22" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Slider">
+                    <Grid VerticalAlignment="Center">
+                        <Border Height="4" CornerRadius="2" Background="#FF23262C" />
+                        <Track x:Name="PART_Track">
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton Command="Slider.DecreaseLarge" Focusable="False">
+                                    <RepeatButton.Template>
+                                        <ControlTemplate TargetType="RepeatButton">
+                                            <Border Height="4" CornerRadius="2" Background="{StaticResource AccentRed}" />
+                                        </ControlTemplate>
+                                    </RepeatButton.Template>
+                                </RepeatButton>
+                            </Track.DecreaseRepeatButton>
+                            <Track.Thumb>
+                                <Thumb Width="15" Height="15" Cursor="Hand">
+                                    <Thumb.Template>
+                                        <ControlTemplate TargetType="Thumb">
+                                            <Grid>
+                                                <Ellipse Fill="{StaticResource AccentRed}">
+                                                    <Ellipse.Effect>
+                                                        <DropShadowEffect Color="{StaticResource AccentRedColor}"
+                                                                          BlurRadius="10" ShadowDepth="0" Opacity="0.55" />
+                                                    </Ellipse.Effect>
+                                                </Ellipse>
+                                                <Ellipse Width="5" Height="5" Fill="White" />
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </Thumb.Template>
+                                </Thumb>
+                            </Track.Thumb>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton Command="Slider.IncreaseLarge" Focusable="False" Opacity="0" />
+                            </Track.IncreaseRepeatButton>
+                        </Track>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style x:Key="HudLabel" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource BodyFont}" />
         <Setter Property="Foreground" Value="{StaticResource TextDim}" />

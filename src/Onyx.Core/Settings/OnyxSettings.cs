@@ -62,6 +62,81 @@ public sealed class OnyxSettings
     /// <summary>Face-detection confidence threshold (0.3 = sensitive, 0.9 = strict).</summary>
     public double ScoreThreshold { get; set; } = 0.6;
 
+    /// <summary>Frames to keep covering the last known face after detection drops out.</summary>
+    public int LatchFrames { get; set; } = 15;
+
+    /// <summary>Background mode: 0 Off, 1 Blur, 2 Image, 3 Colour.</summary>
+    public int BackgroundMode { get; set; }
+
+    /// <summary>Background blur strength (1..30).</summary>
+    public int BackgroundStrength { get; set; } = 12;
+
+    /// <summary>Backdrop image for BackgroundMode.Image.</summary>
+    public string BackgroundImagePath { get; set; } = string.Empty;
+
+    /// <summary>Width of the person cutout as a percentage (50..160).</summary>
+    public int BackgroundTightness { get; set; } = 100;
+
+    /// <summary>Stall threshold in ms before the watchdog blacks out the output. 0 disables.</summary>
+    public int WatchdogMs { get; set; } = 1200;
+
+    /// <summary>Three one-click presets. Always kept at exactly three slots.</summary>
+    public List<Profile> Profiles { get; set; } = new();
+
+    /// <summary>
+    /// A saved snapshot of the cloak/output settings, loaded in one click. Only the
+    /// look-and-feel knobs are captured — never the arm state, so loading a profile
+    /// can't put you live by accident.
+    /// </summary>
+    public sealed class Profile
+    {
+        public string Name { get; set; } = "PROFILE";
+        public int CoverStyle { get; set; }
+        public int MosaicBlockSize { get; set; } = 16;
+        public int DetectEveryN { get; set; } = 3;
+        public double ScoreThreshold { get; set; } = 0.6;
+        public bool ParanoidMode { get; set; } = true;
+        public int LatchFrames { get; set; } = 15;
+        public int BackgroundMode { get; set; }
+        public int BackgroundStrength { get; set; } = 12;
+        public string BackgroundImagePath { get; set; } = string.Empty;
+        public int BackgroundTightness { get; set; } = 100;
+        public int OutputEffect { get; set; }
+        public bool Hud { get; set; }
+        public bool Watermark { get; set; }
+        public string CoverText { get; set; } = "NOPE";
+        public string CoverImagePath { get; set; } = string.Empty;
+    }
+
+    /// <summary>The three stock presets, used on first run and by RESET.</summary>
+    public static List<Profile> DefaultProfiles() => new()
+    {
+        // Conservative: recognisable-but-softened, nothing distracting.
+        new Profile
+        {
+            Name = "WORK CALL", CoverStyle = 0, MosaicBlockSize = 12, DetectEveryN = 3,
+            ScoreThreshold = 0.55, ParanoidMode = true, LatchFrames = 15,
+            BackgroundMode = 1, BackgroundStrength = 14, OutputEffect = 0, Hud = false,
+            Watermark = false,
+        },
+        // On-brand: ghost cover, watermark, tactical HUD.
+        new Profile
+        {
+            Name = "STREAM", CoverStyle = 2, MosaicBlockSize = 16, DetectEveryN = 2,
+            ScoreThreshold = 0.5, ParanoidMode = true, LatchFrames = 20,
+            BackgroundMode = 1, BackgroundStrength = 18, OutputEffect = 1, Hud = true,
+            Watermark = true,
+        },
+        // Maximum paranoia: hard black cover, long latch, room fully replaced.
+        new Profile
+        {
+            Name = "FULL ANON", CoverStyle = 1, MosaicBlockSize = 30, DetectEveryN = 1,
+            ScoreThreshold = 0.4, ParanoidMode = true, LatchFrames = 45,
+            BackgroundMode = 3, BackgroundStrength = 30, OutputEffect = 0, Hud = false,
+            Watermark = false,
+        },
+    };
+
     private static string FilePath
     {
         get
@@ -80,14 +155,17 @@ public sealed class OnyxSettings
             if (File.Exists(FilePath))
             {
                 var json = File.ReadAllText(FilePath);
-                return JsonSerializer.Deserialize<OnyxSettings>(json) ?? new OnyxSettings();
+                var loaded = JsonSerializer.Deserialize<OnyxSettings>(json) ?? new OnyxSettings();
+                // Settings written before profiles existed, or hand-edited badly.
+                if (loaded.Profiles.Count != 3) { loaded.Profiles = DefaultProfiles(); }
+                return loaded;
             }
         }
         catch
         {
             // Corrupt/unreadable settings fall back to defaults.
         }
-        return new OnyxSettings();
+        return new OnyxSettings { Profiles = DefaultProfiles() };
     }
 
     public sealed class OverlayState
