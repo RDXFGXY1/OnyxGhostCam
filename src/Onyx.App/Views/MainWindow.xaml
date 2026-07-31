@@ -3,428 +3,610 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:c="clr-namespace:Onyx.App.Controls"
         Title="GHOSTCAM"
-        Height="860" Width="520"
+        Height="670" Width="1000" MinHeight="600" MinWidth="920"
         Background="{StaticResource BgBlack}"
         WindowStartupLocation="CenterScreen"
-        WindowStyle="None"
-        ResizeMode="CanMinimize"
-        AllowsTransparency="False">
+        WindowStyle="None" ResizeMode="CanResize"
+        UseLayoutRounding="True">
 
     <Window.Resources>
         <Style x:Key="StepLed" TargetType="TextBlock">
             <Setter Property="Text" Value="●" />
-            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontSize" Value="11" />
             <Setter Property="Foreground" Value="{StaticResource TextDim}" />
             <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="Margin" Value="0,0,10,0" />
+            <Setter Property="Margin" Value="0,0,9,0" />
         </Style>
-        <Style x:Key="PanelHeader" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-            <Setter Property="Height" Value="42" />
-            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-            <Setter Property="Margin" Value="0,8,0,0" />
+
+        <Style x:Key="TabButton" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+            <Setter Property="FontFamily" Value="{StaticResource BodyFont}" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="b" Background="Transparent" Padding="0,11">
+                            <Grid>
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                <Border x:Name="ind" Height="2" VerticalAlignment="Bottom" Margin="8,0"
+                                        Background="{StaticResource AccentRed}" Visibility="Collapsed" />
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter Property="Foreground" Value="{StaticResource AccentRed}" />
+                                <Setter TargetName="ind" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="{StaticResource Text}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="RowGrid" TargetType="Grid">
+            <Setter Property="Margin" Value="0,0,0,11" />
         </Style>
     </Window.Resources>
 
-  <Border BorderBrush="{StaticResource AccentRed}" BorderThickness="2">
-   <Grid>
-    <Grid.RowDefinitions>
-        <RowDefinition Height="Auto" />
-        <RowDefinition Height="*" />
-    </Grid.RowDefinitions>
-
-    <!-- ===== Custom title bar (drag to move) ===== -->
-    <Border Grid.Row="0" Background="{StaticResource Panel}" Height="30"
-            MouseLeftButtonDown="OnTitleBarDrag">
+    <Border BorderBrush="{StaticResource AccentRed}" BorderThickness="2">
         <Grid>
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
-                <Rectangle Width="10" Height="10" Fill="{StaticResource AccentRed}" VerticalAlignment="Center" />
-                <TextBlock Text="GHOSTCAM" FontFamily="{StaticResource BodyFont}" FontSize="12"
-                           Foreground="{StaticResource Text}" Margin="10,0,0,0" VerticalAlignment="Center" />
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="▾" Style="{StaticResource CaptionButton}" Click="OnHideToTray"
-                        ToolTip="Hide to tray" />
-                <Button Content="—" Style="{StaticResource CaptionButton}" Click="OnMinimize" ToolTip="Minimize" />
-                <Button Content="✕" Style="{StaticResource CaptionButton}" Click="OnCloseWindow" ToolTip="Close" />
-            </StackPanel>
-        </Grid>
-    </Border>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-    <Grid Grid.Row="1" Margin="18">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
-
-        <!-- ===== Header ===== -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-            <TextBlock Text="GHOSTCAM" FontFamily="{StaticResource HeaderFont}" FontSize="34"
-                       Foreground="{StaticResource AccentRed}" />
-            <StackPanel VerticalAlignment="Center" Margin="12,3,0,0">
-                <TextBlock Text="// NULL STUDIO" Style="{StaticResource HudValue}" FontSize="13" />
-                <TextBlock Text="PROCEDURAL FLIGHT CONTROL" Style="{StaticResource HudLabel}" />
-            </StackPanel>
-        </StackPanel>
-
-        <!-- ===== Docked preview ===== -->
-        <c:BracketFrame Grid.Row="1" Label="FEED MONITOR" Height="196">
-            <Grid>
-                <Image x:Name="DockPreview" Stretch="Uniform" />
-                <TextBlock x:Name="PreviewHint" Text="FEED OFFLINE" Style="{StaticResource HudLabel}"
-                           HorizontalAlignment="Center" VerticalAlignment="Center" />
-            </Grid>
-        </c:BracketFrame>
-
-        <!-- ===== Master bar ===== -->
-        <Border Grid.Row="2" Margin="0,10,0,0" Background="{StaticResource Panel}"
-                BorderBrush="{StaticResource AccentRedDim}" BorderThickness="2" Padding="12,8">
-            <Grid>
-                <StackPanel Orientation="Horizontal">
-                    <Ellipse x:Name="MasterLed" Width="14" Height="14" Fill="{StaticResource TextDim}"
-                             VerticalAlignment="Center" />
-                    <TextBlock x:Name="MasterStatus" Text="SYSTEM SAFE" FontFamily="{StaticResource HeaderFont}"
-                               FontSize="17" Foreground="{StaticResource Text}" Margin="12,0,0,0"
-                               VerticalAlignment="Center" />
-                </StackPanel>
-                <Button x:Name="KillButton" Content="MASTER KILL" Width="130" Height="30"
-                        HorizontalAlignment="Right" Click="OnMasterKill" />
-            </Grid>
-        </Border>
-
-        <!-- ===== Procedure panels ===== -->
-        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Margin="0,10,0,0">
-            <StackPanel Margin="0,0,8,0">
-
-                <!-- ========== SENSOR ========== -->
-                <Button Style="{StaticResource PanelHeader}" Click="OnToggleSensor">
-                    <Grid>
-                        <TextBlock Text="◤ SENSOR" HorizontalAlignment="Left" VerticalAlignment="Center" />
-                        <TextBlock x:Name="SensorState" Text="SAFE" HorizontalAlignment="Right"
-                                   VerticalAlignment="Center" FontSize="13" />
-                    </Grid>
-                </Button>
-                <Border x:Name="SensorContent" BorderBrush="{StaticResource AccentRedDim}" BorderThickness="2,0,2,2"
-                        Padding="14,12" Visibility="Visible">
-                    <StackPanel>
-                        <Grid Margin="0,0,0,10">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock x:Name="SLed1" Style="{StaticResource StepLed}" />
-                                <TextBlock Text="1 · POWER" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                            </StackPanel>
-                            <ToggleButton x:Name="SensorPowerSw" Style="{StaticResource CockpitSwitch}"
-                                          HorizontalAlignment="Right" Checked="OnSensorPower" Unchecked="OnSensorPower" />
-                        </Grid>
-                        <Grid Margin="0,0,0,10">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock x:Name="SLed2" Style="{StaticResource StepLed}" />
-                                <TextBlock Text="2 · SELECT INPUT" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button x:Name="CamDown" Content="−" Width="30" Height="28" Tag="cam-" Click="OnStep" />
-                                <TextBlock x:Name="CamVal" Text="0" Style="{StaticResource HudValue}"
-                                           Width="36" TextAlignment="Center" VerticalAlignment="Center" />
-                                <Button x:Name="CamUp" Content="+" Width="30" Height="28" Tag="cam+" Click="OnStep" />
-                            </StackPanel>
-                        </Grid>
-                        <Grid Margin="0,0,0,10">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock x:Name="SLed3" Style="{StaticResource StepLed}" />
-                                <TextBlock Text="3 · ACQUIRE FEED" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                            </StackPanel>
-                            <Button x:Name="AcquireBtn" Content="ACQUIRE" Width="110" Height="30"
-                                    HorizontalAlignment="Right" Click="OnAcquire" />
-                        </Grid>
-                        <Grid>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock x:Name="SLed4" Style="{StaticResource StepLed}" />
-                                <TextBlock Text="4 · VERIFY" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button x:Name="SensorAbort" Content="ABORT" Width="80" Height="30" Click="OnSensorAbort" />
-                                <Button x:Name="ConfirmFeed" Content="CONFIRM" Width="100" Height="30"
-                                        Margin="8,0,0,0" Click="OnConfirmFeed" />
-                            </StackPanel>
-                        </Grid>
+            <!-- ══ title bar ══ -->
+            <Border Grid.Row="0" Background="{StaticResource Panel}" Height="32"
+                    MouseLeftButtonDown="OnTitleBarDrag">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                        <Rectangle Width="10" Height="10" Fill="{StaticResource AccentRed}" VerticalAlignment="Center" />
+                        <TextBlock Text="GHOSTCAM" FontFamily="{StaticResource BodyFont}" FontSize="12"
+                                   Foreground="{StaticResource Text}" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        <TextBlock Text="NULL STUDIO" FontFamily="{StaticResource BodyFont}" FontSize="10"
+                                   Foreground="{StaticResource TextDim}" Margin="12,1,0,0" VerticalAlignment="Center" />
                     </StackPanel>
-                </Border>
-
-                <!-- ========== CLOAK ========== -->
-                <Button Style="{StaticResource PanelHeader}" Click="OnToggleCloak">
-                    <Grid>
-                        <TextBlock Text="◤ CLOAK" HorizontalAlignment="Left" VerticalAlignment="Center" />
-                        <TextBlock x:Name="CloakState" Text="LOCKED" HorizontalAlignment="Right"
-                                   VerticalAlignment="Center" FontSize="13" />
-                    </Grid>
-                </Button>
-                <Border x:Name="CloakContent" BorderBrush="{StaticResource AccentRedDim}" BorderThickness="2,0,2,2"
-                        Padding="14,12" Visibility="Collapsed">
-                    <StackPanel>
-                        <Grid Margin="0,0,0,10">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock x:Name="CLed1" Style="{StaticResource StepLed}" />
-                                <TextBlock Text="1 · ENABLE MODULE" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                            </StackPanel>
-                            <ToggleButton x:Name="CloakEnableSw" Style="{StaticResource CockpitSwitch}"
-                                          HorizontalAlignment="Right" Checked="OnCloakEnable" Unchecked="OnCloakEnable" />
-                        </Grid>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                            <TextBlock x:Name="CLed2" Style="{StaticResource StepLed}" />
-                            <TextBlock Text="2 · COVER MODE" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                        </StackPanel>
-                        <UniformGrid Columns="4" Margin="0,0,0,10">
-                            <RadioButton x:Name="CoverMosaic" GroupName="COVER" Content="MOSAIC" Tag="0"
-                                         Style="{StaticResource SelectorButton}" Checked="OnCoverSel" />
-                            <RadioButton x:Name="CoverBlack" GroupName="COVER" Content="BLACK" Tag="1"
-                                         Style="{StaticResource SelectorButton}" Checked="OnCoverSel" />
-                            <RadioButton x:Name="CoverGhost" GroupName="COVER" Content="GHOST" Tag="2"
-                                         Style="{StaticResource SelectorButton}" Checked="OnCoverSel" />
-                            <RadioButton x:Name="CoverCensor" GroupName="COVER" Content="CENSOR" Tag="3"
-                                         Style="{StaticResource SelectorButton}" Checked="OnCoverSel" />
-                        </UniformGrid>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                            <TextBlock x:Name="CLed3" Style="{StaticResource StepLed}" />
-                            <TextBlock Text="3 · CALIBRATE" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                        </StackPanel>
-                        <Grid Margin="24,0,0,6">
-                            <TextBlock Text="STRENGTH" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button Content="−" Width="30" Height="28" Tag="strength-" Click="OnStep" />
-                                <TextBlock x:Name="StrengthVal" Text="16" Style="{StaticResource HudValue}"
-                                           Width="36" TextAlignment="Center" VerticalAlignment="Center" />
-                                <Button Content="+" Width="30" Height="28" Tag="strength+" Click="OnStep" />
-                            </StackPanel>
-                        </Grid>
-                        <Grid Margin="24,0,0,6">
-                            <TextBlock Text="SENSITIVITY" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button Content="−" Width="30" Height="28" Tag="sens-" Click="OnStep" />
-                                <TextBlock x:Name="SensVal" Text="60" Style="{StaticResource HudValue}"
-                                           Width="36" TextAlignment="Center" VerticalAlignment="Center" />
-                                <Button Content="+" Width="30" Height="28" Tag="sens+" Click="OnStep" />
-                            </StackPanel>
-                        </Grid>
-                        <Grid Margin="24,0,0,10">
-                            <TextBlock Text="SCAN RATE" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button Content="−" Width="30" Height="28" Tag="rate-" Click="OnStep" />
-                                <TextBlock x:Name="RateVal" Text="3" Style="{StaticResource HudValue}"
-                                           Width="36" TextAlignment="Center" VerticalAlignment="Center" />
-                                <Button Content="+" Width="30" Height="28" Tag="rate+" Click="OnStep" />
-                            </StackPanel>
-                        </Grid>
-                        <Grid Margin="0,0,0,10">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock x:Name="CLed4" Style="{StaticResource StepLed}" />
-                                <TextBlock Text="4 · TEST CLOAK" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                            </StackPanel>
-                            <Button x:Name="TestBtn" Content="TEST" Width="110" Height="30"
-                                    HorizontalAlignment="Right" Click="OnTestCloak" />
-                        </Grid>
-                        <Grid>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock x:Name="CLed5" Style="{StaticResource StepLed}" />
-                                <TextBlock Text="5 · CONFIRM" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button x:Name="CloakAbort" Content="ABORT" Width="80" Height="30" Click="OnCloakAbort" />
-                                <Button x:Name="ConfirmCloak" Content="ENGAGE" Width="100" Height="30"
-                                        Margin="8,0,0,0" Click="OnConfirmCloak" />
-                            </StackPanel>
-                        </Grid>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="▾" Style="{StaticResource CaptionButton}" Click="OnHideToTray" ToolTip="Hide to tray" />
+                        <Button Content="—" Style="{StaticResource CaptionButton}" Click="OnMinimize" ToolTip="Minimize" />
+                        <Button Content="✕" Style="{StaticResource CaptionButton}" Click="OnCloseWindow" ToolTip="Close" />
                     </StackPanel>
-                </Border>
+                </Grid>
+            </Border>
 
-                <!-- ========== UPLINK ========== -->
-                <Button Style="{StaticResource PanelHeader}" Click="OnToggleUplink">
-                    <Grid>
-                        <TextBlock Text="◤ UPLINK" HorizontalAlignment="Left" VerticalAlignment="Center" />
-                        <TextBlock x:Name="UplinkState" Text="LOCKED" HorizontalAlignment="Right"
-                                   VerticalAlignment="Center" FontSize="13" />
-                    </Grid>
-                </Button>
-                <Border x:Name="UplinkContent" BorderBrush="{StaticResource AccentRedDim}" BorderThickness="2,0,2,2"
-                        Padding="14,12" Visibility="Collapsed">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                            <TextBlock x:Name="ULed1" Style="{StaticResource StepLed}" />
-                            <TextBlock Text="1 · PRE-FLIGHT CHECK" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                        </StackPanel>
-                        <StackPanel Margin="24,0,0,10">
-                            <TextBlock x:Name="ChkSensor" Text="○ SENSOR" Style="{StaticResource HudLabel}" />
-                            <TextBlock x:Name="ChkCloak" Text="○ CLOAK" Style="{StaticResource HudLabel}" Margin="0,3,0,0" />
-                            <TextBlock x:Name="ChkObs" Text="○ OBS DRIVER" Style="{StaticResource HudLabel}" Margin="0,3,0,0" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                            <TextBlock x:Name="ULed2" Style="{StaticResource StepLed}" />
-                            <TextBlock Text="2 · PAYLOAD" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                        </StackPanel>
-                        <UniformGrid Columns="3" Margin="24,0,0,8">
-                            <RadioButton x:Name="FilterNone" GroupName="FILT" Content="NONE" Tag="0"
-                                         Style="{StaticResource SelectorButton}" Checked="OnFilterSel" />
-                            <RadioButton x:Name="FilterScan" GroupName="FILT" Content="SCAN" Tag="1"
-                                         Style="{StaticResource SelectorButton}" Checked="OnFilterSel" />
-                            <RadioButton x:Name="FilterGlitch" GroupName="FILT" Content="GLITCH" Tag="2"
-                                         Style="{StaticResource SelectorButton}" Checked="OnFilterSel" />
-                        </UniformGrid>
-                        <Grid Margin="24,0,0,10">
-                            <TextBlock Text="TACTICAL HUD" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                            <ToggleButton x:Name="HudSwitch" Style="{StaticResource CockpitSwitch}"
-                                          HorizontalAlignment="Right" Checked="OnHudSw" Unchecked="OnHudSw" />
+            <!-- ══ body ══ -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="370" />
+                </Grid.ColumnDefinitions>
+
+                <!-- ── stage: preview + primary action ── -->
+                <Grid Grid.Column="0" Margin="16,16,8,16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <c:BracketFrame Grid.Row="0" Label="FEED MONITOR">
+                        <Grid>
+                            <Image x:Name="DockPreview" Stretch="Uniform" />
+                            <TextBlock x:Name="PreviewHint" Text="FEED OFFLINE — PRESS GO LIVE"
+                                       Style="{StaticResource HudLabel}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Margin="26,26,26,0">
+                                <TextBlock x:Name="FpsText" Text="-- FPS" HorizontalAlignment="Right"
+                                           Style="{StaticResource HudValue}" FontSize="12" />
+                                <TextBlock x:Name="AccelText" Text="--" HorizontalAlignment="Right" Margin="0,3,0,0"
+                                           Style="{StaticResource HudLabel}" FontSize="10" />
+                            </StackPanel>
                         </Grid>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <TextBlock x:Name="ULed3" Style="{StaticResource StepLed}" />
-                            <TextBlock Text="3 · ARM GUARD" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                        </StackPanel>
-                        <Button x:Name="ArmGuardBtn" Content="⚠  LIFT ARM GUARD  ⚠" Height="38"
-                                Margin="24,0,0,10" Click="OnLiftGuard" />
+                    </c:BracketFrame>
 
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <TextBlock x:Name="ULed4" Style="{StaticResource StepLed}" />
-                            <TextBlock Text="4 · BROADCAST" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                        </StackPanel>
-                        <Border x:Name="BroadcastBtn" Height="46" Margin="24,0,0,10"
-                                Background="{StaticResource Panel}" BorderBrush="{StaticResource AccentRed}"
-                                BorderThickness="2" IsEnabled="False"
-                                PreviewMouseLeftButtonDown="OnBroadcastDown"
-                                PreviewMouseLeftButtonUp="OnBroadcastUp" MouseLeave="OnBroadcastUp">
+                    <Grid Grid.Row="1" Margin="0,12,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0" Background="{StaticResource Panel}"
+                                BorderBrush="{StaticResource AccentRedDim}" BorderThickness="2" Padding="12,8">
                             <Grid>
-                                <Rectangle x:Name="BroadcastFill" Fill="{StaticResource AccentRedDim}"
-                                           HorizontalAlignment="Left" Width="0" />
-                                <TextBlock Text="HOLD TO BROADCAST" FontFamily="{StaticResource HeaderFont}"
-                                           FontSize="15" Foreground="{StaticResource Text}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse x:Name="MasterLed" Width="12" Height="12"
+                                             Fill="{StaticResource TextDim}" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="MasterStatus" Text="SYSTEM SAFE"
+                                               FontFamily="{StaticResource HeaderFont}" FontSize="16"
+                                               Foreground="{StaticResource Text}" Margin="12,0,0,0"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                                <Button x:Name="KillButton" Content="MASTER KILL" Width="128" Height="30"
+                                        HorizontalAlignment="Right" Click="OnMasterKill" />
                             </Grid>
                         </Border>
-                        <Button x:Name="UplinkAbort" Content="STOP UPLINK" Height="30" Click="OnUplinkAbort" />
-                    </StackPanel>
-                </Border>
 
-                <!-- ========== CONFIG ========== -->
-                <Button Style="{StaticResource PanelHeader}" Click="OnToggleConfig">
-                    <TextBlock Text="◤ CONFIG" HorizontalAlignment="Left" VerticalAlignment="Center" />
-                </Button>
-                <Border x:Name="ConfigContent" BorderBrush="{StaticResource AccentRedDim}" BorderThickness="2,0,2,2"
-                        Padding="14,12" Visibility="Collapsed">
-                    <StackPanel>
-                        <TextBlock Text="RESOLUTION" Style="{StaticResource HudLabel}" Margin="0,0,0,4" />
-                        <UniformGrid Columns="2" Margin="0,0,0,10">
-                            <RadioButton x:Name="Res720" GroupName="RES" Content="720p" Tag="720"
-                                         Style="{StaticResource SelectorButton}" Checked="OnResSel" />
-                            <RadioButton x:Name="Res1080" GroupName="RES" Content="1080p" Tag="1080"
-                                         Style="{StaticResource SelectorButton}" Checked="OnResSel" />
-                        </UniformGrid>
-                        <Grid Margin="0,0,0,10">
-                            <TextBlock Text="PARANOID (cover if no face)" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                            <ToggleButton x:Name="ParanoidSwitch" Style="{StaticResource CockpitSwitch}"
-                                          HorizontalAlignment="Right" Checked="OnParanoidSw" Unchecked="OnParanoidSw" />
-                        </Grid>
-                        <Grid Margin="0,0,0,10">
-                            <TextBlock Text="GPU ACCELERATION" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                            <ToggleButton x:Name="GpuSwitch" Style="{StaticResource CockpitSwitch}"
-                                          HorizontalAlignment="Right" Checked="OnGpuSw" Unchecked="OnGpuSw" />
-                        </Grid>
-                        <Grid Margin="0,0,0,10">
-                            <TextBlock Text="MIRROR ALL (video + text)" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                            <ToggleButton x:Name="MirrorSwitch" Style="{StaticResource CockpitSwitch}"
-                                          HorizontalAlignment="Right" Checked="OnMirrorSw" Unchecked="OnMirrorSw" />
-                        </Grid>
-                        <Grid Margin="0,0,0,10">
-                            <TextBlock Text="MIRROR TEXT ONLY (keep video)" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                            <ToggleButton x:Name="MirrorTextSwitch" Style="{StaticResource CockpitSwitch}"
-                                          HorizontalAlignment="Right" Checked="OnMirrorTextSw" Unchecked="OnMirrorTextSw" />
-                        </Grid>
-                        <Grid Margin="0,0,0,10">
-                            <TextBlock Text="AUTO-ARM ON BOOT" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                            <ToggleButton x:Name="BootSwitch" Style="{StaticResource CockpitSwitch}"
-                                          HorizontalAlignment="Right" />
-                        </Grid>
-                        <Grid Margin="0,0,0,10">
-                            <TextBlock Text="COCKPIT AUDIO" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                            <ToggleButton x:Name="SoundSwitch" Style="{StaticResource CockpitSwitch}"
-                                          HorizontalAlignment="Right" Checked="OnSoundSw" Unchecked="OnSoundSw" />
-                        </Grid>
-
-                        <Border Height="2" Background="{StaticResource AccentRedDim}" Margin="0,6,0,12" />
-
-                        <Grid Margin="0,0,0,4">
-                            <TextBlock Text="CHECK FOR UPDATES" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                            <ToggleButton x:Name="UpdateSwitch" Style="{StaticResource CockpitSwitch}"
-                                          HorizontalAlignment="Right" Checked="OnUpdateSw" Unchecked="OnUpdateSw" />
-                        </Grid>
-                        <TextBlock Text="The only network call GhostCam makes. Nothing about you is sent."
-                                   Style="{StaticResource HudLabel}" TextWrapping="Wrap" Margin="0,0,0,10" />
-                        <Button x:Name="CheckUpdateButton" Content="CHECK NOW" Height="32" Click="OnCheckUpdateNow" />
-                    </StackPanel>
-                </Border>
-
-                <!-- ========== OVERLAYS ========== -->
-                <Button Style="{StaticResource PanelHeader}" Click="OnToggleOverlays">
-                    <TextBlock Text="◤ OVERLAYS" HorizontalAlignment="Left" VerticalAlignment="Center" />
-                </Button>
-                <Border x:Name="OverlaysContent" BorderBrush="{StaticResource AccentRedDim}" BorderThickness="2,0,2,2"
-                        Padding="14,12" Visibility="Collapsed">
-                    <StackPanel>
-                        <Grid Margin="0,0,0,6">
-                            <TextBlock Text="WATERMARK" Style="{StaticResource HudLabel}" VerticalAlignment="Center" />
-                            <ToggleButton x:Name="WatermarkSwitch" Style="{StaticResource CockpitSwitch}"
-                                          HorizontalAlignment="Right" Checked="OnWatermarkSw" Unchecked="OnWatermarkSw" />
-                        </Grid>
-                        <Grid Margin="0,0,0,12">
+                        <Grid Grid.Row="1" Margin="0,10,0,0">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="GHOSTCAM ·" Style="{StaticResource HudValue}"
-                                       VerticalAlignment="Center" Margin="0,0,8,0" />
-                            <TextBox Grid.Column="1" x:Name="WatermarkNameBox" Text="KYROS"
-                                     TextChanged="OnWatermarkName" />
+                            <Button x:Name="GoLiveButton" Grid.Column="0" Height="48" Click="OnGoLive">
+                                <TextBlock x:Name="GoLiveText" Text="◤ GO LIVE"
+                                           FontFamily="{StaticResource HeaderFont}" FontSize="18"
+                                           VerticalAlignment="Center" />
+                            </Button>
+                            <Button x:Name="PopOutButton" Grid.Column="2" Content="POP-OUT MONITOR"
+                                    Width="180" Height="48" Click="OnPopOutClick" />
                         </Grid>
+                    </Grid>
+                </Grid>
 
-                        <Border Height="2" Background="{StaticResource AccentRedDim}" Margin="0,0,0,10" />
+                <!-- ── control rail ── -->
+                <Border Grid.Column="1" Background="{StaticResource BgBlack}"
+                        BorderBrush="{StaticResource AccentRedDim}" BorderThickness="2,0,0,0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
 
-                        <Button Content="OPEN OVERLAY EDITOR" Height="40" Click="OnOpenEditor" />
-                        <TextBlock Text="drag text / images anywhere on the stage" Style="{StaticResource HudLabel}"
-                                   Margin="0,6,0,0" TextWrapping="Wrap" />
-                    </StackPanel>
+                        <Border Grid.Row="0" Background="{StaticResource Panel}"
+                                BorderBrush="{StaticResource AccentRedDim}" BorderThickness="0,0,0,2">
+                            <UniformGrid Columns="4">
+                                <RadioButton x:Name="TabCover" GroupName="TAB" Content="CLOAK" Tag="cover"
+                                             Style="{StaticResource TabButton}" IsChecked="True" Checked="OnTab" />
+                                <RadioButton x:Name="TabOverlay" GroupName="TAB" Content="OVERLAY" Tag="overlay"
+                                             Style="{StaticResource TabButton}" Checked="OnTab" />
+                                <RadioButton x:Name="TabOutput" GroupName="TAB" Content="OUTPUT" Tag="output"
+                                             Style="{StaticResource TabButton}" Checked="OnTab" />
+                                <RadioButton x:Name="TabSetup" GroupName="TAB" Content="SETUP" Tag="setup"
+                                             Style="{StaticResource TabButton}" Checked="OnTab" />
+                            </UniformGrid>
+                        </Border>
+
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="14,14,8,14">
+                            <Grid>
+
+                                <!-- ═══ CLOAK ═══ -->
+                                <StackPanel x:Name="CloakContent">
+                                    <Grid Style="{StaticResource RowGrid}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock x:Name="CLed1" Style="{StaticResource StepLed}" />
+                                            <TextBlock Text="1 · ENABLE COVER" Style="{StaticResource HudLabel}" />
+                                        </StackPanel>
+                                        <ToggleButton x:Name="CloakEnableSw" Style="{StaticResource CockpitSwitch}"
+                                                      HorizontalAlignment="Right" Checked="OnCloakEnable" Unchecked="OnCloakEnable" />
+                                    </Grid>
+                                    <TextBlock x:Name="CloakState" Text="LOCKED" Style="{StaticResource HudLabel}"
+                                               FontSize="10" Margin="20,-4,0,12" />
+
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                        <TextBlock x:Name="CLed2" Style="{StaticResource StepLed}" />
+                                        <TextBlock Text="2 · COVER MODE" Style="{StaticResource HudLabel}" />
+                                    </StackPanel>
+                                    <UniformGrid Columns="3" Margin="0,0,0,12">
+                                        <RadioButton x:Name="CoverMosaic" GroupName="COVER" Content="MOSAIC" Tag="0"
+                                                     Style="{StaticResource SelectorButton}" Checked="OnCoverSel" />
+                                        <RadioButton x:Name="CoverBlack" GroupName="COVER" Content="BLACK" Tag="1"
+                                                     Style="{StaticResource SelectorButton}" Checked="OnCoverSel" />
+                                        <RadioButton x:Name="CoverGhost" GroupName="COVER" Content="GHOST" Tag="2"
+                                                     Style="{StaticResource SelectorButton}" Checked="OnCoverSel" />
+                                        <RadioButton x:Name="CoverCensor" GroupName="COVER" Content="CENSOR" Tag="3"
+                                                     Style="{StaticResource SelectorButton}" Checked="OnCoverSel" />
+                                        <RadioButton x:Name="CoverImage" GroupName="COVER" Content="IMAGE" Tag="4"
+                                                     Style="{StaticResource SelectorButton}" Checked="OnCoverSel" />
+                                        <RadioButton x:Name="CoverTextMode" GroupName="COVER" Content="TEXT" Tag="5"
+                                                     Style="{StaticResource SelectorButton}" Checked="OnCoverSel" />
+                                    </UniformGrid>
+
+                                    <Grid x:Name="MaskRow" Margin="0,0,0,12" Visibility="Collapsed">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="8" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" BorderBrush="{StaticResource AccentRedDim}"
+                                                BorderThickness="2" Padding="6,7">
+                                            <TextBlock x:Name="MaskNameText" Text="no image chosen"
+                                                       Style="{StaticResource HudLabel}" TextTrimming="CharacterEllipsis" />
+                                        </Border>
+                                        <Button Grid.Column="2" Content="UPLOAD" Width="90" Height="34" Click="OnUploadMask" />
+                                    </Grid>
+
+                                    <Grid x:Name="CoverTextRow" Margin="0,0,0,12" Visibility="Collapsed">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="TEXT" Style="{StaticResource HudLabel}"
+                                                   Margin="0,0,8,0" />
+                                        <TextBox Grid.Column="1" x:Name="CoverTextBox" Text="NOPE"
+                                                 TextChanged="OnCoverTextChanged" />
+                                    </Grid>
+
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                        <TextBlock x:Name="CLed3" Style="{StaticResource StepLed}" />
+                                        <TextBlock Text="3 · CALIBRATE" Style="{StaticResource HudLabel}" />
+                                    </StackPanel>
+
+                                    <Grid Style="{StaticResource RowGrid}">
+                                        <TextBlock Text="STRENGTH" Style="{StaticResource HudLabel}" Margin="20,0,0,0" />
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <Button Content="−" Width="30" Height="28" Tag="strength-" Click="OnStep" />
+                                            <TextBlock x:Name="StrengthVal" Text="16" Style="{StaticResource HudValue}"
+                                                       Width="40" TextAlignment="Center" VerticalAlignment="Center" />
+                                            <Button Content="+" Width="30" Height="28" Tag="strength+" Click="OnStep" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <Grid Style="{StaticResource RowGrid}">
+                                        <TextBlock Text="SENSITIVITY" Style="{StaticResource HudLabel}" Margin="20,0,0,0" />
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <Button Content="−" Width="30" Height="28" Tag="sens-" Click="OnStep" />
+                                            <TextBlock x:Name="SensVal" Text="60" Style="{StaticResource HudValue}"
+                                                       Width="40" TextAlignment="Center" VerticalAlignment="Center" />
+                                            <Button Content="+" Width="30" Height="28" Tag="sens+" Click="OnStep" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <Grid Style="{StaticResource RowGrid}">
+                                        <TextBlock Text="SCAN RATE" Style="{StaticResource HudLabel}" Margin="20,0,0,0" />
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <Button Content="−" Width="30" Height="28" Tag="rate-" Click="OnStep" />
+                                            <TextBlock x:Name="RateVal" Text="3" Style="{StaticResource HudValue}"
+                                                       Width="40" TextAlignment="Center" VerticalAlignment="Center" />
+                                            <Button Content="+" Width="30" Height="28" Tag="rate+" Click="OnStep" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <Grid Style="{StaticResource RowGrid}">
+                                        <TextBlock Text="COVER LATCH" Style="{StaticResource HudLabel}" Margin="20,0,0,0"
+                                                   ToolTip="Frames to keep covering after the detector loses your face." />
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <Button Content="−" Width="30" Height="28" Tag="latch-" Click="OnStep" />
+                                            <TextBlock x:Name="LatchVal" Text="15" Style="{StaticResource HudValue}"
+                                                       Width="40" TextAlignment="Center" VerticalAlignment="Center" />
+                                            <Button Content="+" Width="30" Height="28" Tag="latch+" Click="OnStep" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <Grid Style="{StaticResource RowGrid}">
+                                        <TextBlock Text="PARANOID" Style="{StaticResource HudLabel}" Margin="20,0,0,0" />
+                                        <ToggleButton x:Name="ParanoidSwitch" Style="{StaticResource CockpitSwitch}"
+                                                      HorizontalAlignment="Right" Checked="OnParanoidSw" Unchecked="OnParanoidSw" />
+                                    </Grid>
+
+                                    <Border Height="2" Background="{StaticResource AccentRedDim}" Margin="0,2,0,12" />
+                                    <TextBlock Text="BACKGROUND" Style="{StaticResource HudLabel}" Margin="0,0,0,6" />
+                                    <UniformGrid Columns="4" Margin="0,0,0,10">
+                                        <RadioButton x:Name="BgOff" GroupName="BG" Content="OFF" Tag="0"
+                                                     Style="{StaticResource SelectorButton}" Checked="OnBgSel" />
+                                        <RadioButton x:Name="BgBlur" GroupName="BG" Content="BLUR" Tag="1"
+                                                     Style="{StaticResource SelectorButton}" Checked="OnBgSel" />
+                                        <RadioButton x:Name="BgImage" GroupName="BG" Content="IMAGE" Tag="2"
+                                                     Style="{StaticResource SelectorButton}" Checked="OnBgSel" />
+                                        <RadioButton x:Name="BgColor" GroupName="BG" Content="VOID" Tag="3"
+                                                     Style="{StaticResource SelectorButton}" Checked="OnBgSel" />
+                                    </UniformGrid>
+                                    <Grid x:Name="BgStrengthRow" Style="{StaticResource RowGrid}" Visibility="Collapsed">
+                                        <TextBlock Text="BLUR AMOUNT" Style="{StaticResource HudLabel}" Margin="20,0,0,0" />
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <Button Content="−" Width="30" Height="28" Tag="bg-" Click="OnStep" />
+                                            <TextBlock x:Name="BgStrengthVal" Text="12" Style="{StaticResource HudValue}"
+                                                       Width="40" TextAlignment="Center" VerticalAlignment="Center" />
+                                            <Button Content="+" Width="30" Height="28" Tag="bg+" Click="OnStep" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <Grid x:Name="BgTightRow" Style="{StaticResource RowGrid}" Visibility="Collapsed">
+                                        <TextBlock Text="CUTOUT WIDTH %" Style="{StaticResource HudLabel}" Margin="20,0,0,0"
+                                                   ToolTip="Lower it if the wall beside you stays sharp. Raise it if your shoulders get blurred." />
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <Button Content="−" Width="30" Height="28" Tag="tight-" Click="OnStep" />
+                                            <TextBlock x:Name="BgTightVal" Text="100" Style="{StaticResource HudValue}"
+                                                       Width="44" TextAlignment="Center" VerticalAlignment="Center" />
+                                            <Button Content="+" Width="30" Height="28" Tag="tight+" Click="OnStep" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <Grid x:Name="BgImageRow" Margin="0,0,0,12" Visibility="Collapsed">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="8" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" BorderBrush="{StaticResource AccentRedDim}"
+                                                BorderThickness="2" Padding="6,7">
+                                            <TextBlock x:Name="BgNameText" Text="no backdrop chosen"
+                                                       Style="{StaticResource HudLabel}" TextTrimming="CharacterEllipsis" />
+                                        </Border>
+                                        <Button Grid.Column="2" Content="UPLOAD" Width="90" Height="34" Click="OnUploadBackdrop" />
+                                    </Grid>
+                                    <TextBlock x:Name="BgHint"
+                                               Text="Soft cutout traced from your face — reads like a shallow depth of field, not a green screen. If wall stays sharp, lower CUTOUT WIDTH."
+                                               Style="{StaticResource HudLabel}" FontSize="10" TextWrapping="Wrap"
+                                               Margin="0,0,0,12" Visibility="Collapsed" />
+                                    <Border Height="2" Background="{StaticResource AccentRedDim}" Margin="0,0,0,12" />
+
+                                    <Grid Style="{StaticResource RowGrid}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock x:Name="CLed4" Style="{StaticResource StepLed}" />
+                                            <TextBlock Text="4 · TEST" Style="{StaticResource HudLabel}" />
+                                        </StackPanel>
+                                        <Button x:Name="TestBtn" Content="TEST" Width="110" Height="32"
+                                                HorizontalAlignment="Right" Click="OnTestCloak" />
+                                    </Grid>
+                                    <Grid>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock x:Name="CLed5" Style="{StaticResource StepLed}" />
+                                            <TextBlock Text="5 · CONFIRM" Style="{StaticResource HudLabel}" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <Button x:Name="CloakAbort" Content="ABORT" Width="76" Height="32" Click="OnCloakAbort" />
+                                            <Button x:Name="ConfirmCloak" Content="ENGAGE" Width="92" Height="32"
+                                                    Margin="8,0,0,0" Click="OnConfirmCloak" />
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+
+                                <!-- ═══ OVERLAY ═══ -->
+                                <StackPanel x:Name="OverlaysContent" Visibility="Collapsed">
+                                    <Grid Style="{StaticResource RowGrid}">
+                                        <TextBlock Text="WATERMARK" Style="{StaticResource HudLabel}" />
+                                        <ToggleButton x:Name="WatermarkSwitch" Style="{StaticResource CockpitSwitch}"
+                                                      HorizontalAlignment="Right" Checked="OnWatermarkSw" Unchecked="OnWatermarkSw" />
+                                    </Grid>
+                                    <Grid Margin="0,0,0,16">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="GHOSTCAM //" Style="{StaticResource HudValue}"
+                                                   Margin="0,0,8,0" />
+                                        <TextBox Grid.Column="1" x:Name="WatermarkNameBox" Text="KYROS" TextChanged="OnWatermarkName" />
+                                    </Grid>
+
+                                    <Border Height="2" Background="{StaticResource AccentRedDim}" Margin="0,0,0,14" />
+                                    <TextBlock Text="Add your own text and images, then drag them into place."
+                                               Style="{StaticResource HudLabel}" TextWrapping="Wrap" Margin="0,0,0,10" />
+                                    <Button Content="OPEN OVERLAY EDITOR" Height="38" Click="OnOpenEditor" />
+
+                                    <Border Height="2" Background="{StaticResource AccentRedDim}" Margin="0,16,0,14" />
+                                    <TextBlock Text="OUTPUT FILTER" Style="{StaticResource HudLabel}" Margin="0,0,0,6" />
+                                    <UniformGrid Columns="3" Margin="0,0,0,12">
+                                        <RadioButton x:Name="FilterNone" GroupName="FILT" Content="NONE" Tag="0"
+                                                     Style="{StaticResource SelectorButton}" Checked="OnFilterSel" />
+                                        <RadioButton x:Name="FilterScan" GroupName="FILT" Content="SCAN" Tag="1"
+                                                     Style="{StaticResource SelectorButton}" Checked="OnFilterSel" />
+                                        <RadioButton x:Name="FilterGlitch" GroupName="FILT" Content="GLITCH" Tag="2"
+                                                     Style="{StaticResource SelectorButton}" Checked="OnFilterSel" />
+                                    </UniformGrid>
+                                    <Grid Style="{StaticResource RowGrid}">
+                                        <TextBlock Text="TACTICAL HUD" Style="{StaticResource HudLabel}" />
+                                        <ToggleButton x:Name="HudSwitch" Style="{StaticResource CockpitSwitch}"
+                                                      HorizontalAlignment="Right" Checked="OnHudSw" Unchecked="OnHudSw" />
+                                    </Grid>
+                                </StackPanel>
+
+                                <!-- ═══ OUTPUT ═══ -->
+                                <StackPanel x:Name="UplinkContent" Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                        <TextBlock x:Name="ULed1" Style="{StaticResource StepLed}" />
+                                        <TextBlock Text="1 · PRE-FLIGHT" Style="{StaticResource HudLabel}" />
+                                    </StackPanel>
+                                    <StackPanel Margin="20,0,0,14">
+                                        <TextBlock x:Name="ChkSensor" Text="○ SENSOR" Style="{StaticResource HudLabel}" />
+                                        <TextBlock x:Name="ChkCloak" Text="○ CLOAK" Style="{StaticResource HudLabel}" Margin="0,5,0,0" />
+                                        <TextBlock x:Name="ChkObs" Text="○ OBS DRIVER" Style="{StaticResource HudLabel}" Margin="0,5,0,0" />
+                                    </StackPanel>
+
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                        <TextBlock x:Name="ULed2" Style="{StaticResource StepLed}" />
+                                        <TextBlock x:Name="UplinkState" Text="LOCKED" Style="{StaticResource HudLabel}" />
+                                    </StackPanel>
+
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                        <TextBlock x:Name="ULed3" Style="{StaticResource StepLed}" />
+                                        <TextBlock Text="2 · ARM GUARD" Style="{StaticResource HudLabel}" />
+                                    </StackPanel>
+                                    <Button x:Name="ArmGuardBtn" Content="⚠  LIFT ARM GUARD  ⚠" Height="38"
+                                            Margin="20,0,0,12" Click="OnLiftGuard" />
+
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                        <TextBlock x:Name="ULed4" Style="{StaticResource StepLed}" />
+                                        <TextBlock Text="3 · BROADCAST" Style="{StaticResource HudLabel}" />
+                                    </StackPanel>
+                                    <Border x:Name="BroadcastBtn" Height="44" Margin="20,0,0,10"
+                                            Background="{StaticResource Panel}" BorderBrush="{StaticResource AccentRed}"
+                                            BorderThickness="2" IsEnabled="False"
+                                            PreviewMouseLeftButtonDown="OnBroadcastDown"
+                                            PreviewMouseLeftButtonUp="OnBroadcastUp" MouseLeave="OnBroadcastUp">
+                                        <Grid ClipToBounds="True">
+                                            <Rectangle x:Name="BroadcastFill" Fill="{StaticResource AccentRedDim}"
+                                                       HorizontalAlignment="Left" Width="0" />
+                                            <TextBlock Text="HOLD TO BROADCAST" FontFamily="{StaticResource HeaderFont}"
+                                                       FontSize="14" Foreground="{StaticResource Text}"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Grid>
+                                    </Border>
+                                    <Button x:Name="UplinkAbort" Content="STOP UPLINK" Height="34" Margin="20,0,0,0"
+                                            Click="OnUplinkAbort" />
+
+                                    <TextBlock Text="In Discord / Zoom / Teams pick &quot;OBS Virtual Camera&quot;."
+                                               Style="{StaticResource HudLabel}" TextWrapping="Wrap" Margin="0,14,0,0" />
+                                </StackPanel>
+
+                                <!-- ═══ SETUP ═══ -->
+                                <StackPanel x:Name="SensorContent" Visibility="Collapsed">
+                                    <TextBlock Text="PROFILES" Style="{StaticResource HudLabel}" Margin="0,0,0,6" />
+                                    <Grid Style="{StaticResource RowGrid}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="Prof0Name" Grid.Column="0" Text="WORK CALL"
+                                                   Style="{StaticResource HudValue}" VerticalAlignment="Center" />
+                                        <Button Grid.Column="1" Content="LOAD" Width="62" Height="28" Tag="0" Click="OnProfileLoad" />
+                                        <Button Grid.Column="2" Content="SAVE" Width="62" Height="28" Tag="0" Margin="6,0,0,0" Click="OnProfileSave" />
+                                    </Grid>
+                                    <Grid Style="{StaticResource RowGrid}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="Prof1Name" Grid.Column="0" Text="STREAM"
+                                                   Style="{StaticResource HudValue}" VerticalAlignment="Center" />
+                                        <Button Grid.Column="1" Content="LOAD" Width="62" Height="28" Tag="1" Click="OnProfileLoad" />
+                                        <Button Grid.Column="2" Content="SAVE" Width="62" Height="28" Tag="1" Margin="6,0,0,0" Click="OnProfileSave" />
+                                    </Grid>
+                                    <Grid Style="{StaticResource RowGrid}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="Prof2Name" Grid.Column="0" Text="FULL ANON"
+                                                   Style="{StaticResource HudValue}" VerticalAlignment="Center" />
+                                        <Button Grid.Column="1" Content="LOAD" Width="62" Height="28" Tag="2" Click="OnProfileLoad" />
+                                        <Button Grid.Column="2" Content="SAVE" Width="62" Height="28" Tag="2" Margin="6,0,0,0" Click="OnProfileSave" />
+                                    </Grid>
+                                    <TextBlock Text="SAVE overwrites a slot with your current cloak settings. Arm state is never stored."
+                                               Style="{StaticResource HudLabel}" FontSize="10" TextWrapping="Wrap" Margin="0,0,0,10" />
+                                    <Button Content="RESET PROFILES" Height="30" Click="OnProfilesReset" />
+
+                                    <Border Height="2" Background="{StaticResource AccentRedDim}" Margin="0,14,0,12" />
+
+                                    <Grid Style="{StaticResource RowGrid}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock x:Name="SLed1" Style="{StaticResource StepLed}" />
+                                            <TextBlock Text="1 · POWER" Style="{StaticResource HudLabel}" />
+                                        </StackPanel>
+                                        <ToggleButton x:Name="SensorPowerSw" Style="{StaticResource CockpitSwitch}"
+                                                      HorizontalAlignment="Right" Checked="OnSensorPower" Unchecked="OnSensorPower" />
+                                    </Grid>
+                                    <Grid Style="{StaticResource RowGrid}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock x:Name="SLed2" Style="{StaticResource StepLed}" />
+                                            <TextBlock Text="2 · CAMERA" Style="{StaticResource HudLabel}" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <Button x:Name="CamDown" Content="−" Width="30" Height="28" Tag="cam-" Click="OnStep" />
+                                            <TextBlock x:Name="CamVal" Text="0" Style="{StaticResource HudValue}"
+                                                       Width="40" TextAlignment="Center" VerticalAlignment="Center" />
+                                            <Button x:Name="CamUp" Content="+" Width="30" Height="28" Tag="cam+" Click="OnStep" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <Grid Style="{StaticResource RowGrid}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock x:Name="SLed3" Style="{StaticResource StepLed}" />
+                                            <TextBlock Text="3 · ACQUIRE" Style="{StaticResource HudLabel}" />
+                                        </StackPanel>
+                                        <Button x:Name="AcquireBtn" Content="ACQUIRE" Width="110" Height="32"
+                                                HorizontalAlignment="Right" Click="OnAcquire" />
+                                    </Grid>
+                                    <Grid Style="{StaticResource RowGrid}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock x:Name="SLed4" Style="{StaticResource StepLed}" />
+                                            <TextBlock x:Name="SensorState" Text="SAFE" Style="{StaticResource HudLabel}" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <Button x:Name="SensorAbort" Content="ABORT" Width="76" Height="32" Click="OnSensorAbort" />
+                                            <Button x:Name="ConfirmFeed" Content="CONFIRM" Width="92" Height="32"
+                                                    Margin="8,0,0,0" Click="OnConfirmFeed" />
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <TextBlock Text="RESOLUTION" Style="{StaticResource HudLabel}" Margin="0,6,0,6" />
+                                    <UniformGrid Columns="2" Margin="0,0,0,12">
+                                        <RadioButton x:Name="Res720" GroupName="RES" Content="720p" Tag="720"
+                                                     Style="{StaticResource SelectorButton}" Checked="OnResSel" />
+                                        <RadioButton x:Name="Res1080" GroupName="RES" Content="1080p" Tag="1080"
+                                                     Style="{StaticResource SelectorButton}" Checked="OnResSel" />
+                                    </UniformGrid>
+
+                                    <Border Height="2" Background="{StaticResource AccentRedDim}" Margin="0,0,0,12" />
+                                    <Grid Style="{StaticResource RowGrid}">
+                                        <TextBlock Text="MIRROR ALL" Style="{StaticResource HudLabel}" />
+                                        <ToggleButton x:Name="MirrorSwitch" Style="{StaticResource CockpitSwitch}"
+                                                      HorizontalAlignment="Right" Checked="OnMirrorSw" Unchecked="OnMirrorSw" />
+                                    </Grid>
+                                    <Grid Style="{StaticResource RowGrid}">
+                                        <TextBlock Text="MIRROR TEXT ONLY" Style="{StaticResource HudLabel}" />
+                                        <ToggleButton x:Name="MirrorTextSwitch" Style="{StaticResource CockpitSwitch}"
+                                                      HorizontalAlignment="Right" Checked="OnMirrorTextSw" Unchecked="OnMirrorTextSw" />
+                                    </Grid>
+                                    <Grid Style="{StaticResource RowGrid}">
+                                        <TextBlock Text="GPU ACCELERATION" Style="{StaticResource HudLabel}" />
+                                        <ToggleButton x:Name="GpuSwitch" Style="{StaticResource CockpitSwitch}"
+                                                      HorizontalAlignment="Right" Checked="OnGpuSw" Unchecked="OnGpuSw" />
+                                    </Grid>
+                                    <Grid Style="{StaticResource RowGrid}">
+                                        <TextBlock Text="AUTO-ARM ON BOOT" Style="{StaticResource HudLabel}" />
+                                        <ToggleButton x:Name="BootSwitch" Style="{StaticResource CockpitSwitch}"
+                                                      HorizontalAlignment="Right" />
+                                    </Grid>
+                                    <Grid Style="{StaticResource RowGrid}">
+                                        <TextBlock Text="START WITH WINDOWS" Style="{StaticResource HudLabel}"
+                                                   ToolTip="Launch GhostCam to the tray when you sign in." />
+                                        <ToggleButton x:Name="StartupSwitch" Style="{StaticResource CockpitSwitch}"
+                                                      HorizontalAlignment="Right" Checked="OnStartupSw" Unchecked="OnStartupSw" />
+                                    </Grid>
+                                    <Grid Style="{StaticResource RowGrid}">
+                                        <TextBlock Text="COCKPIT AUDIO" Style="{StaticResource HudLabel}" />
+                                        <ToggleButton x:Name="SoundSwitch" Style="{StaticResource CockpitSwitch}"
+                                                      HorizontalAlignment="Right" Checked="OnSoundSw" Unchecked="OnSoundSw" />
+                                    </Grid>
+
+                                    <Border Height="2" Background="{StaticResource AccentRedDim}" Margin="0,4,0,12" />
+                                    <TextBlock Text="WATCHDOG" Style="{StaticResource HudLabel}" Margin="0,0,0,6" />
+                                    <Grid Style="{StaticResource RowGrid}">
+                                        <TextBlock Text="STALL CUTOFF (MS)" Style="{StaticResource HudLabel}" Margin="20,0,0,0"
+                                                   ToolTip="If no frame arrives within this long while live, the output is blacked out." />
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <Button Content="−" Width="30" Height="28" Tag="dog-" Click="OnStep" />
+                                            <TextBlock x:Name="DogVal" Text="1200" Style="{StaticResource HudValue}"
+                                                       Width="52" TextAlignment="Center" VerticalAlignment="Center" />
+                                            <Button Content="+" Width="30" Height="28" Tag="dog+" Click="OnStep" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <TextBlock Text="Set to 0 to disable. If the camera stalls, GhostCam pushes black instead of leaving your last frame on air."
+                                               Style="{StaticResource HudLabel}" FontSize="10" TextWrapping="Wrap" />
+
+                                    <Border Height="2" Background="{StaticResource AccentRedDim}" Margin="0,4,0,12" />
+                                    <Grid Style="{StaticResource RowGrid}">
+                                        <TextBlock Text="CHECK FOR UPDATES" Style="{StaticResource HudLabel}" />
+                                        <ToggleButton x:Name="UpdateSwitch" Style="{StaticResource CockpitSwitch}"
+                                                      HorizontalAlignment="Right" Checked="OnUpdateSw" Unchecked="OnUpdateSw" />
+                                    </Grid>
+                                    <Button x:Name="CheckUpdateButton" Content="CHECK NOW" Height="32" Click="OnCheckUpdateNow" />
+
+                                    <StackPanel x:Name="DiagContent" Margin="0,14,0,0">
+                                        <TextBlock Text="GHOSTCAM · NULL STUDIO · KYROS"
+                                                   Style="{StaticResource HudLabel}" FontSize="10" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </ScrollViewer>
+                    </Grid>
                 </Border>
+            </Grid>
 
-                <!-- ========== DIAG ========== -->
-                <Button Style="{StaticResource PanelHeader}" Click="OnToggleDiag">
-                    <TextBlock Text="◤ DIAGNOSTICS" HorizontalAlignment="Left" VerticalAlignment="Center" />
-                </Button>
-                <Border x:Name="DiagContent" BorderBrush="{StaticResource AccentRedDim}" BorderThickness="2,0,2,2"
-                        Padding="14,12" Visibility="Collapsed">
-                    <StackPanel>
-                        <Grid Margin="0,0,0,6">
-                            <TextBlock Text="THROUGHPUT" Style="{StaticResource HudLabel}" />
-                            <TextBlock x:Name="FpsText" Text="-- FPS" HorizontalAlignment="Right"
-                                       Style="{StaticResource HudValue}" FontSize="15" />
-                        </Grid>
-                        <Grid Margin="0,0,0,6">
-                            <TextBlock Text="ACCELERATION" Style="{StaticResource HudLabel}" />
-                            <TextBlock x:Name="AccelText" Text="--" HorizontalAlignment="Right"
-                                       Style="{StaticResource HudValue}" />
-                        </Grid>
-                        <Button x:Name="PopOutButton" Content="POP-OUT MONITOR" Height="34" Margin="0,6,0,0"
-                                Click="OnPopOutClick" />
+            <!-- ══ status bar ══ -->
+            <Border Grid.Row="2" Background="{StaticResource Panel}"
+                    BorderBrush="{StaticResource AccentRedDim}" BorderThickness="0,2,0,0" Padding="14,7">
+                <Grid>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="STATUS:" Style="{StaticResource HudLabel}" />
+                        <TextBlock x:Name="StatusText" Text="idle" Style="{StaticResource HudValue}"
+                                   Foreground="{StaticResource Text}" Margin="8,0,0,0"
+                                   TextTrimming="CharacterEllipsis" />
                     </StackPanel>
-                </Border>
-            </StackPanel>
-        </ScrollViewer>
-
-        <!-- ===== Status bar ===== -->
-        <Border Grid.Row="4" Margin="0,10,0,0" Background="{StaticResource Panel}"
-                BorderBrush="{StaticResource AccentRedDim}" BorderThickness="0,2,0,0" Padding="10,6">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="STATUS:" Style="{StaticResource HudLabel}" />
-                <TextBlock x:Name="StatusText" Text="idle" Style="{StaticResource HudValue}"
-                           Foreground="{StaticResource Text}" Margin="8,0,0,0" TextWrapping="Wrap" />
-            </StackPanel>
-        </Border>
-    </Grid>
-   </Grid>
-  </Border>
+                    <TextBlock Text="OBS VIRTUAL CAMERA" HorizontalAlignment="Right" VerticalAlignment="Center"
+                               Style="{StaticResource HudLabel}" FontSize="10" />
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
 </Window>

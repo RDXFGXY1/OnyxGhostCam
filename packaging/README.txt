@@ -75,6 +75,8 @@ WHAT YOU CAN DO
 
 Choose how you're hidden:
     Mosaic     - classic chunky pixelation
+    Image      - any picture you upload, tracks your face
+    Text       - hide behind a word of your choice
     Black      - a solid black box
     Ghost      - a little cartoon ghost over your face
     Censored   - tabloid-style black bar

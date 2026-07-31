@@ -1,18 +1,24 @@
 {
-  "version": "1.0.0",
-  "name": "Ghost Cam v0.1.0",
-  "published": "2026-07-29",
-  "url": "https://github.com/RDXFGXY1/OnyxGhostCam/releases/download/v1.0.0/GhostCam-Setup-1.0.0.exe",
+  "version": "1.2.0",
+  "name": "GhostCam v1.2.0",
+  "published": "2026-07-31",
+  "url": "https://github.com/RDXFGXY1/OnyxGhostCam/releases/download/v1.2.0/GhostCam-Setup-1.2.0.exe",
   "sizeMb": 85,
   "mandatory": false,
   "added": [
-    "First public release",
-    "Real-time face cover: mosaic, black, ghost, censored",
-    "Overlay editor with drag-to-place text and images",
-    "Watermark, scanline and glitch filters, tactical HUD",
-    "Cockpit controls with step-by-step arming and MASTER KILL",
-    "Pop-out monitor and system-tray mode"
+    "Cover latch: keeps covering your face for a moment after the detector loses it, so a blink or a head turn can't expose you for a frame",
+    "Background blur and replace: hide your room, not just your face — blur it, swap in your own image, or black it out",
+    "Profiles: three one-click presets (WORK CALL, STREAM, FULL ANON) that load all your cloak settings at once",
+    "Pipeline watchdog: if the camera stalls or gets unplugged while you're live, the output goes black instead of freezing on your last frame",
+    "START WITH WINDOWS toggle — GhostCam can launch straight to the tray at sign-in",
+    "Portable ZIP download for anyone whose antivirus blocks the installer"
   ],
-  "fixed": [],
-  "changed": []
+  "fixed": [
+    "New layout built around a large live preview with a tabbed control rail, instead of stacked panels",
+    "Face tracking no longer jitters when the detector briefly misses you"
+  ],
+  "changed": [
+    "\"Start with Windows\" moved out of the installer into the app's SETUP tab — same feature, fewer antivirus false positives",
+    "Releases now ship SHA256 checksums so you can verify your download"
+  ]
 }
